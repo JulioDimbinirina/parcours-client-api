@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Welcome!</title>
+        {# Run `composer require symfony/webpack-encore-bundle`
+           and uncomment the following Encore helpers to start using Symfony UX #}
+            {#{{ encore_entry_link_tags('app') }}#}
+
+            {#{{ encore_entry_script_tags('app') }}#}
+        <style>
+            .page_break {
+                page-break-after: always;
+            }
+            .bordurer{
+                border:1px solid black;
+                border-collapse: collapse;
+            }
+            body{
+                font-size:11pt;
+                font-family:'Calibri';
+            }
+        </style>
+    </head>
+    <body>
+            <table style="width:100%">
+                <tr>
+                    <th></th>
+                    <th style="width:60%">
+                        <h5>
+                            <g>{{ titre }} DE PRESTATION DE SERVICES BON DE COMMANDE SIGNE EN DATE DU {{ DateSignature is defined ? (DateSignature|date("d/m/Y")) : '' }}
+                            </g>
+                        </h5>
+                    </th>
+                    <th></th>
+                </tr>
+                </table>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">Entre les soussignées : <br><br>
+                    <b>{{Societe ?? null}}</b>, {{form_juridique}} au capital de {{capital ?? null}} , immatriculée au Registre du Commerce 
+                    et des Sociétés de {{SocieteFacture.ville ?? null}} sous le numéro  {{numeroFiscal ?? null}}, dont le siège social est situé à {{adresse ?? null}}, {{ville ?? null}}
+                    , représentée par {{ bdc.resumeLead.customer.user.getCurrentUsername ?? null }}, en sa qualité de  {{Fonction}}, dûment habilité à l’effet des présentes,
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "Prestataire", d'une part,</td> 
+                </tr>
+            </table>
+            <br><br>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">ET : <br><br>
+                    <b>{{ bdc.resumeLead.customer.raisonSocial is not null ? bdc.resumeLead.customer.raisonSocial|upper : null }}</b>, au capital social  de {{bdc.resumeLead.customer.cp ?? null}} ,
+                    dont le siège social est situé au {{bdc.resumeLead.customer.adresse ?? null}} , immatriculée au Registre du Commerce {{registreNumero}}
+                    et des Sociétés de {{bdc.resumeLead.customer.ville ?? null}} sous le numéro {{registreNumero ?? null}}, dont le siège social est situé à {{adresse ?? null}}, {{ville ?? null}}
+                    , représentée par {{MrsRepresente}}, en sa qualité de  {{bdc.resumeLead.customer.categorieClient.libelle ?? null}}, dûment habilité à l’effet des présentes,
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table  style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "{{CathegorieClient}}", d'une part,</td> 
+                </tr>
+            </table>
+            <table class="page_break" style="width:100%">
+                <tr>
+                    <td>Le "Prestataire" et le {{CathegorieClient}} étant individuellement désignés par une/la « Partie » et conjointement par les « Parties ». </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%">
+            <tr>
+                <th style="width:20%"></th>
+                <th>LES PARTIES ONT PREALABLEMENT EXPOSE CE QUI SUIT :</th>
+                <th style="width:20%"></th>
+            </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>Les Parties ont signé en date du 
+                    {{ DateSignature is defined ? (DateSignature|date("d/m/Y")) : '' }}, un bon de commande avec les conditions générales de vente de {{Societe}}, suivant lequel le {{CathegorieClient}} met à disposition du
+                    Client une équipe dédiée composée de Développeurs Web confirmés (le « {{ hausseClient.isType == 1 ? 'Syntec' : (hausseClient.isType == 2 ? 'Smic' : 'IHCT-TS')}} initial »).
+                    <br><br>
+                Conformément à la section « Prix » des Conditions Générales de Vente, le montant des Prestations sera révisé chaque année suivant l’indice SYNTEC à la date d’anniversaire du contrat.
+                    <br><br>
+                Les Parties se sont donc rapprochées afin de définir dans le présent contrat (ci-après (le « {{ hausseClient.isType == 1 ? 'Syntec' : (hausseClient.isType == 2 ? 'Smic' : 'IHCT-TS')}} »)  les termes de leur accord.
+                    </td>
+                    <td style="width:2%"> </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>CECI ETANT EXPOSE, IL A ETE CONVENU CE QUI SUIT :</th>
+                    <th style="width:20%"></th>
+                </tr>
+                </table>
+                <br>
+                <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 1 : Objet de l’Avenant.</b>
+                    <br>
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        Le présent avenant a pour objet de mettre à jour la tarification des prestations conformément aux termes des Conditions Générales de Vente.
+                    <br><br>
+                Toutes les dispositions contractuelles non expressément modifiées par les présentes demeurent en vigueur. En cas de contradiction avec celles des présentes, ces dernières prévaudront.  
+                    <br><br>
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 2 : Modification de la section  « Tarification de Production » du Bon de Commande</b> <br>
+
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        Par application de la formule suivante :P1 = P0 x (S1/S0) <br>
+                Où <br>
+                P1 = Prix révisé <br>
+                P0 = Prix d’origine <br>
+                S0 = Indice SYNTEC de référence retenue à la date contractuelle d’origine = {{hausseClient.dateContrat|date('d-m-Y')}} : {{hausseClient.initial}} <br>
+                S1 = Indice du SYNTEC publié à la date de la révision = {{hausseClient.dateContrat|date('d-m-Y')}} : {{hausseClient.actuel}} <br><br>
+
+                La tarification des Prestations applicable à compter du {{hausseClient.dateAplicatif|date('d-m-Y')}} sera comme suit :
+
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                
+                </table>
+                <br>
+                <table  style="width:100%" class="bordurer page_break" >
+                    <tr>
+                        <th class="bordurer" style="border-style: none;"></th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') -1 }}</th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') }}</th>
+                    </tr>
+                    <tr>
+                        <th class="bordurer">Taux horaire</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                    </tr>
+                    {% for BdcO in hauseBdcO %}
+                    <tr>
+                        {% if BdcO.nouveauPrix is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }}</td>
+                            <td class="bordurer">{{ BdcO.ancienPrix|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrix|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.nouveauPrixActe is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Acte</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixActe|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixActe|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.ancienPrixHeure is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Heure</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixHeure|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixHeure|number_format(2, '.', ',') }}</td>
+                         {% else %}
+                            <td></td>
+                        {% endif %}
+
+                    </tr>
+                    {% endfor %}
+                </table>
+                <br><br>
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td><b>Article 3 : Entrée en vigueur</b>
+                        <br>
+                    </td>
+                        <td style="width:2%"> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td>
+                           Le présent avenant entre en vigueur à compter du 1erjuillet 2022.
+                        <br><br>
+                            Fait à Evreux, le [.], en deux (02) exemplaires originaux.
+                        <br><br>
+                        </td>
+                        <td style="width:2%"></td>
+                    </tr>
+                </table>
+
+                <table style="width:100%">
+                    <tr>
+                        <th> <br><br><br><br></th>
+                        <th> <br><br><br><br></th>
+                    </tr>
+                    <tr>
+                        <td style="width:10%"></td>
+                        <td style="width:40%"> 
+                        </td>
+                        <td style="width:40%">{{MrsRepresente}}  {{Fonction}}</td>
+                        <td style="width:10%">
+                        </td>
+                    </tr>
+                </table>
+
+        </body>
+    </html>

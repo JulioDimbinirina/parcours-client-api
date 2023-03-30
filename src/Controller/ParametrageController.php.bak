@@ -1,0 +1,293 @@
+<?php
+
+namespace App\Controller;
+
+use App\Service\ParametrageSuiviRenta;
+use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class ParametrageController extends AbstractController
+{
+    /**
+     * @Route("/parametrage/pays/{page}/{pays}", name="parametrage_pays", methods={"GET"})
+     */
+    public function pays(int $page, string $pays, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            $countries = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_pays_url'));
+
+            if ($pays != "empty"){
+                $countries = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_pays_search_url') . $pays);
+            }
+            if (count($countries->toArray()) > 0) {
+                $res = array();
+                foreach ($countries->toArray() as $country) {
+                    array_push($res, [
+                        'id' => $country["id_pays"],
+                        'pays' => $country["pays1"],
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/bu/{page}/{filter}/{word}", name="parametrage_bu", methods={"GET"})
+     */
+    public function Bus(int $page, ?string $filter, ?string $word, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            if ($word == "empty"){
+                $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_bu_url'));
+            } else {
+                if($filter == "bu") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_bu_search_url').'bu/'.$word);
+                } else {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_bu_search_url').'pays/'. $word);
+                }
+            }
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'id' => $data["id"],
+                        'pays' => $data["Pays"],
+                        'bu' => $data["bu1"]
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/client/{page}/{filter}/{word}", name="parametrage_client", methods={"GET"})
+     */
+    public function Clients(int $page, ?string $filter, ?string $word, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            if ($word == "empty"){
+                $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_client_url') . 'client/list');
+            } else {
+                if($filter == "pays") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_client_search_url').'pays/'. $word);
+                } elseif ($filter == "bu") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_client_search_url').'bu/'. $word);
+                } else {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_client_search_url').'client/'. $word);
+                }
+            }
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'id' => $data["id"],
+                        'pays' => $data["pays"],
+                        'bu' => $data["bu"],
+                        'client' => $data["client1"]
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/operation/{page}/{filter}/{word}", name="parametrage_operation", methods={"GET"})
+     */
+    public function Operation(int $page, ?string $filter, ?string $word, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            if ($word == "empty") {
+                $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_url'));
+            } else {
+                if ($filter == "pays") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_search_url').'pays/'. $word);
+                } else if ($filter == "bu") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_search_url').'bu/'. $word);
+                } else if ($filter == "client") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_search_url').'client/'. $word);
+                } else if ($filter == "operation") {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_search_url').'operation/'. $word);
+                } else {
+                    $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta($this->getParameter('param_operation_search_url').'active/'. $word);
+                }
+            }
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'id' => $data["id"],
+                        'pays' => $data["pays"],
+                        'bu' => $data["bu"],
+                        'client' => $data["client"],
+                        'operation' => $data["operation1"],
+                        'active' => $data["active"]
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/jour_ouvrer/{page}", name="parametrage_jour_ouvrer")
+     */
+    public function JourOuvrer(int $page, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta('http://localhost:12992/api/joursOuvrer');
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'id' => $data["id"],
+                        'pays' => $data["pays"],
+                        'bu' => $data["bu"],
+                        'client' => $data["client"],
+                        'operation' => $data["operation"],
+                        'dateDebut' => $data["date_debut"],
+                        'dateFin' => $data["date_fin"],
+                        'nbJours' => $data["nb_jours"],
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/utilisateurs/{page}", name="parametrage_utilisateurs")
+     */
+    public function Utilisateurs(int $page, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta('http://localhost:12992/api/utilisateur');
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'id' => $data["id_user"],
+                        'login' => $data["login"],
+                        'nom' => $data["nom"],
+                        'prenom' => $data["prenom"],
+                        'password' => $data["mdp"],
+                        'profil' => $data["profil"],
+                        'departement' => $data["Departement"],
+                        'pays' => $data["pays"],
+                        'actif' => $data["actif"]
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/parametrage/saisie_manager/{page}", name="saisie_manager")
+     */
+    public function SaisieManager(int $page, ParametrageSuiviRenta $parametrageSuiviRenta, PaginatorInterface  $paginator): Response
+    {
+        try {
+            $datas = $parametrageSuiviRenta->getDataOnCurrentSuiviRenta('http://localhost:12992/api/saisieManager');
+
+            if (count($datas->toArray()) > 0) {
+                $res = array();
+                foreach ($datas->toArray() as $data) {
+                    array_push($res, [
+                        'pays' => $data["pays"],
+                        'bu' => $data["bu"],
+                        'client' => $data["client"],
+                        'operation' => $data["operation"],
+                        'dateSaisie' => $data["date_saisie"],
+                        'heuresprod' => $data["heuresprod"],
+                        'heuresformation' => $data["heuresformation"],
+                        'actes' => $data["actes"],
+                        'heuresfomationfacturees' => $data["heuresfomationfacturees"],
+                        'dmt' => $data["dmt"],
+                        'login' => $data["login"],
+                    ]);
+                }
+
+                $paginateData = $paginator->paginate($res, $page, 5);
+
+                return $this->json([$paginateData, count($res)], 200, [], []);
+            } else {
+                return $this->json([], 200, [], []);
+            }
+        } catch (Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e . getMessage()
+            ], 400);
+        }
+    }
+}

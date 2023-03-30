@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Welcome!</title>
+        {# Run `composer require symfony/webpack-encore-bundle`
+           and uncomment the following Encore helpers to start using Symfony UX #}
+            {#{{ encore_entry_link_tags('app') }}#}
+
+            {#{{ encore_entry_script_tags('app') }}#}
+        <style>
+            .page_break {
+                page-break-after: always;
+            }
+            .bordurer{
+                border:1px solid black;
+                border-collapse: collapse;
+            }
+            body{
+                font-size:11pt;
+                font-family:'Calibri';
+            }
+        </style>
+    </head>
+    <body>
+            <table style="width:100%">
+                <tr>
+                    <th></th>
+                    <th style="width:60%">
+                        <h5>
+                            <g>{{titrePdfComplet}}
+                            </g>
+                        </h5>
+                    </th>
+                    <th></th>
+                </tr>
+                </table>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">Entre les soussignées : <br><br>
+                    {{premierP}}
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "Prestataire", d'une part,</td> 
+                </tr>
+            </table>
+            <br><br>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">ET : <br><br>
+                    {{DexiemP}}
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table  style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "{{CathegorieClient}}", d'une part,</td> 
+                </tr>
+            </table>
+            <table class="page_break" style="width:100%">
+                <tr>
+                    <td>{{conclusionPage1}} </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%">
+            <tr>
+                <th style="width:20%"></th>
+                <th>{{Titre1Page2}}</th>
+                <th style="width:20%"></th>
+            </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>{{Page2Parti1}}
+                    <br><br>
+                        {{Page2Parti2}}
+                    <br><br>
+                        {{Page2Parti3}}
+
+                    </td>
+                    <td style="width:2%"> </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>{{Titre2Page2}}</th>
+                    <th style="width:20%"></th>
+                </tr>
+                </table>
+                <br>
+                <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>{{titreArticle1}}</b>
+                    <br>
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        {{Page2Article1P1}}
+                    <br><br>
+                        {{Page2Article1P2}}
+                    <br><br>
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>{{titreArticle2}}</b> <br>
+
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        {{Article2p1}} <br>
+                        Où <br>
+                       {{Article2p2}} <br>
+                        {{Article2p3}} <br>
+                        {{Article2p4}} <br>
+                       {{Article2p5}} <br><br>
+
+                      {{Article2p6}}
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                
+                </table>
+                <br>
+                <table  style="width:100%" class="bordurer page_break" >
+                    <tr>
+                        <th class="bordurer" style="border-style: none;"></th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') -1 }}</th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') }}</th>
+                    </tr>
+                    <tr>
+                        <th class="bordurer">Taux horaire</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                    </tr>
+                    {% for BdcO in hauseBdcO %}
+                    <tr>
+                        {% if BdcO.nouveauPrix is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }}</td>
+                            <td class="bordurer">{{ BdcO.ancienPrix|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrix|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.nouveauPrixActe is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Acte</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixActe|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixActe|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.ancienPrixHeure is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Heure</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixHeure|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixHeure|number_format(2, '.', ',') }}</td>
+                         {% else %}
+                            <td></td>
+                        {% endif %}
+
+                    </tr>
+                    {% endfor %}
+                </table>
+                <br><br>
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td><b>Article 3 : Entrée en vigueur</b>
+                        <br>
+                    </td>
+                        <td style="width:2%"> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td>
+                           Le présent avenant entre en vigueur à compter du 1erjuillet 2022.
+                        <br><br>
+                            Fait à Evreux, le [.], en deux (02) exemplaires originaux.
+                        <br><br>
+                        </td>
+                        <td style="width:2%"></td>
+                    </tr>
+                </table>
+
+                <table style="width:100%">
+                    <tr>
+                        <th> <br><br><br><br></th>
+                        <th> <br><br><br><br></th>
+                    </tr>
+                    <tr>
+                        <td style="width:10%"></td>
+                        <td style="width:40%"> 
+                        </td>
+                        <td style="width:40%">{{MrsRepresente}}  {{Fonction}}</td>
+                        <td style="width:10%">
+                        </td>
+                    </tr>
+                </table>
+        </body>
+    </html>

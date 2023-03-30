@@ -1,0 +1,14 @@
+swiftmailer:
+    # url: '%env(MAILER_URL)%'
+    # spool: { type: 'memory' }
+    # disable_delivery: true
+    transport: smtp
+    auth_mode: login
+    #port: 465
+    #encryption: ssl
+    port: 587
+    encryption: 
+    host: pop3.outsourcia-group.com
+    username: 'Parcours_Client@outsourcia-group.com'
+    password: 'Bkp2mkVR8Jbu$'
+    spool: { type: 'memory' }

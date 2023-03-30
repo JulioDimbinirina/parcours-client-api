@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Notification</title>
+    <style>
+        .class {
+            font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif;
+        }
+    </style>
+</head>
+<body class="class" style="background-color:#f3f3f3;">
+{% block body %}
+    <div style="color:#6E6E6E;padding:20px;margin-left: 8%;margin-right: 8%;">
+        <p style="margin-left: 3%;font-size: 20px">{{ bdc.resumeLead.customer.contacts[0].prenom ?? null }} {{ bdc.resumeLead.customer.contacts[0].nom ?? null }},</p>
+        <p style="margin-left: 3%;margin-right: 3%;text-align: justify; font-size: 20px">
+            Un devis vous a été envoyé pour signature.
+        </p>
+        <p style="margin-left: 3%;margin-right: 3%;text-align: justify; font-size: 20px">
+            Merci de cliquer sur le bouton ci-dessous pour passer à la signature électronique.
+        </p>
+        <p style="margin-left: 5%;font-size: 20px">Cordialement,</p>
+        <p style="margin-left: 5%;font-size: 20px">Groupe Outsourcia</p>
+    </div>
+{% endblock %}
+</body>
+</html>

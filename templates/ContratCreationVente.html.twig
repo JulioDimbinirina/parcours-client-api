@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Welcome!</title>
+        {# Run `composer require symfony/webpack-encore-bundle`
+           and uncomment the following Encore helpers to start using Symfony UX #}
+            {#{{ encore_entry_link_tags('app') }}#}
+
+            {#{{ encore_entry_script_tags('app') }}#}
+        <style>
+            .page_break {
+                page-break-after: always;
+            }
+            .bordurer{
+                border:1px solid black;
+                border-collapse: collapse;
+            }
+            body{
+                font-size:11pt;
+                font-family:'Calibri';
+            }
+        </style>
+    </head>
+    <body>
+            <table style="width:100%">
+                <tr>
+                    <th></th>
+                    <th style="width:60%">
+                        <h5>
+                            <g>{{Texte[0]}}
+                            </g>
+                        </h5>
+                    </th>
+                    <th></th>
+                </tr>
+                </table>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">{{Texte[1]}} <br><br>
+                    {{Texte[2]}}
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>{{Texte[3]}},</td> 
+                </tr>
+            </table>
+            <br><br>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">ET: <br><br>{{Texte[4]}}<br><br>
+                    
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table  style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "client", d'une part, </td> 
+                </tr>
+            </table>
+            <table class="page_break" style="width:100%">
+                <tr>
+                    <td>{{Texte[5]}} </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%">
+            <tr>
+                <th style="width:20%"></th>
+                <th>LES PARTIES ONT PREALABLEMENT EXPOSE CE QUI SUIT :</th>
+                <th style="width:20%"></th>
+            </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                    {{Texte[6]}}
+                    <br><br>
+                    {{Texte[7]}}
+                    <br><br>
+                    {{Texte[8]}}
+
+                    </td>
+                    <td style="width:2%"> </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>{{Texte[9]}}</th>
+                    <th style="width:20%"></th>
+                </tr>
+                </table>
+                <br>
+                <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Definition {{Texte[10]}}</b>
+                    <br>
+                    {{Texte[11]}} 
+                    <br> <br>
+                   <b><u>Agent</u></b> : {{Texte[12]}}
+                    <br> <br>
+                   <b><u>Bon de Commande</u></b> : {{Texte[13]}}
+                    
+                    <br> <br>
+                    <b><u>Contrat</u></b> :{{Texte[14]}}
+                    
+                    <br> <br>
+                    <b><u>Heures de Production</u></b> :{{Texte[15]}}
+
+                    
+                    <br> <br>
+                   <b><u>Acte</u></b> :{{Texte[16]}}
+                    
+                    <br> <br>
+                    <b><u>Indicateurs</u></b>  :{{Texte[17]}}
+                    
+                    <br> <br>
+                   <b><u>Partie</u></b>  : {{Texte[18]}}
+                    
+                    <br> <br>
+                   <b><u>Prestations</u></b>  : {{Texte[19]}}
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+            </table>
+                    <br> <br>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 1--> <b>{{Texte[20]}}</b> 
+                    
+                </td><td></td></tr>
+                {% for i in 21..21 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+                <!-- 231-236 Tablau-->
+            </table>
+
+            <table>
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        <!--Article 2--> <b>{{Texte[22]}}</b> 
+                        {% for i in 23..51 %}
+                            <br>
+                            {% if  Texte[i]|first == '*' %}
+                                <br>
+                                <u> {{Texte[i]|slice(1)}} </u>
+                                <br>
+                            {% else %}
+                                {{Texte[i]}}
+                            {% endif %}
+
+                        {% endfor %}
+                        {{Texte[52]}}
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+            </table>
+             <table>
+              {% for i in 53..57 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        <br>
+                            {% if  Texte[i]|first == '*' %}
+                                <br>
+                                <u> {{Texte[i]|slice(1)}} </u>
+                                <br>
+                            {% else %}
+                                {{Texte[i]}}
+                            {% endif %}
+                    </td>
+                    <td  style="width:2%"></td>
+                    <!--58 .. 59 Tablo -->
+                </tr>
+            {% endfor %}
+            </table>
+            <!--Tableau Prestation-->
+            <table style="width:100% ;border:0.1px solid black">
+                <tr>
+                    <th>Prestations</th>
+                    <th>Outils</th>
+                </tr>
+                <tr>
+                    <td>a</td>
+                    <td>a</td>
+                </tr>
+            </table>
+            <table>
+                {% for i in 60..64 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        <br>
+                            {% if  Texte[i]|first == '*' %}
+                                <br>
+                                <u> fdsfsdfsdfsdfsdf  </u>
+                                <br>
+                            {% else %}
+                                {{Texte[i]}}
+                            {% endif %}
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+            {% endfor %}
+            </table>
+            <table>
+                <!-- Article 3-->
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        <br>
+                        <b>3 {{Texte[65]}} </b>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% for i in 66..81 %}
+                    <tr>
+                        <td  style="width:2%"></td>
+                        <td>
+                                {% if  Texte[i]|first == '*' %}
+                                    <br>
+                                    <u> {{Texte[i]|slice(1)}} </u>
+                                    <br>
+                                {% else %}
+                                <br>
+                                    {{Texte[i]}}
+                                {% endif %}
+                        </td>
+                        <td  style="width:2%"></td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <br><br>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 4--> <b>{{Texte[83]}}</b> 
+                </td><td></td></tr>
+                {% for i in 84..88 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                       {% if  Texte[i]|first == '*' %}
+                                <br>
+                                <u> {{Texte[i]|slice(1)}} </u>
+                                <br>
+                            {% else %}
+                                {{Texte[i]}}
+                            {% endif %}
+                        <br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <br><br>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 5--> <b>{{Texte[89]}}</b> 
+                </td><td></td></tr>
+                {% for i in 90..92 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <br><br>
+             <table>
+                <tr><td></td><td>
+                    <!--Article 6--> <b>{{Texte[93]}}</b> 
+                </td><td></td></tr>
+                {% for i in 94..102 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {% if  Texte[i]|first == '*' %}
+                                <br>
+                                <u> {{Texte[i]|slice(1)}} </u>
+                                <br>
+                            {% else %}
+                                {{Texte[i]}}
+                            {% endif %}
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+                <!--103-106 Tableau-->
+                <tr>
+                    <table style="width:100% ;">
+                        <tr >
+                            <th style="border:0.1px solid black">Designation</th>
+                            <th style="border:0.1px solid black" colspan="2">Prix en € HT</th>
+                        </tr>
+                        <tr>
+                            <td style="border:0.1px solid black">Frais de Mise en Place</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                             <td style="border:0.1px solid black"> 11
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border:0.1px solid black">Frais de Mise en Place</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                             <td style="border:0.1px solid black"> 11
+                            </td>
+                        </tr>
+                    </table>
+                </tr>
+               <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[107]}}
+                        <br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+            </table>
+            
+
+            <table>
+                <tr><td></td><td>
+                    <!--Article 6 6.2--> <u>{{Texte[108]}}</u> 
+                </td><td></td></tr>
+                {% for i in 109..109 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <!--Tablo Frais Pilotage-->
+                <table style="width:100% ;">
+                        <tr >
+                            <th style="border:0.1px solid black">Designation</th>
+                            <th style="border:0.1px solid black">Prix en € HT</th>
+                        </tr>
+                        <tr>
+                            <td style="border:0.1px solid black">Forfait mensuel de pilotage</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                        </tr>
+                    </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 6 6.3 <u>-->{{Texte[113]}}</u> 
+                </td><td></td></tr>
+                {% for i in 114..114 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+                <!--115-119 Tableau-->
+            </table>
+             <table style="width:100% ;">
+                        <tr >
+                            <th style="border:0.1px solid black">Designation</th>
+                            <th style="border:0.1px solid black">Prix en € HT</th>
+                        </tr>
+                        <tr>
+                            <td style="border:0.1px solid black">Prestation N1</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                        </tr>
+                         <tr>
+                            <td style="border:0.1px solid black">Prestation N1</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                        </tr>
+                         <tr>
+                            <td style="border:0.1px solid black">Prestation N1</td>
+                            <td style="border:0.1px solid black"> 13
+                            </td>
+                        </tr>
+                    </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 6 6.4--> <u>{{Texte[122]}}</u> 
+                </td><td></td></tr>
+                {% for i in 123..127 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <table>
+                <tr><td></td><td>
+                   <!--- Article 6 6.5--> <u>{{Texte[128]}}</u> 
+                </td><td></td></tr>
+                {% for i in 129..134 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table>
+                <tr><td></td><td>
+                    <!--Article 7--> <u>{{Texte[135]}}</u> 
+                </td><td></td></tr>
+                {% for i in 136..138 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table>
+                <tr><td></td><td>
+                    <!--Article 8--> <u>{{Texte[139]}}</u> 
+                </td><td></td></tr>
+                {% for i in 140..140 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <table>
+                <tr><td></td><td>
+                    <!--Article 9--> <u>{{Texte[141]}}</u> 
+                </td><td></td></tr>
+                {% for i in 142..146 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article 10--> <u>{{Texte[147]}}</u> 
+                </td><td></td></tr>
+                {% for i in 148..162 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                   <!-- Article 11--> <u>{{Texte[163]}}</u> 
+                </td><td></td></tr>
+                {% for i in 164..167 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article 12--> <u>{{Texte[168]}}</u> 
+                </td><td></td></tr>
+                {% for i in 169..169 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                   <!-- Article 13--> <u>{{Texte[170]}}</u> 
+                </td><td></td></tr>
+                {% for i in 171..172 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article 14--> <u>{{Texte[173]}}</u> 
+                </td><td></td></tr>
+                {% for i in 174..174 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article 15--> <u>{{Texte[175]}}</u> 
+                </td><td></td></tr>
+                {% for i in 176..177 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article 16--> <u>{{Texte[178]}}</u> 
+                </td><td></td></tr>
+                {% for i in 179..187 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[188]}}</u> 
+                </td><td></td></tr>
+                {% for i in 189..190 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[191]}}</u> 
+                </td><td></td></tr>
+                {% for i in 192..193 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[194]}}</u> 
+                </td><td></td></tr>
+                {% for i in 195..202 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[203]}}</u> 
+                </td><td></td></tr>
+                {% for i in 204..205 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[206]}}</u> 
+                </td><td></td></tr>
+                {% for i in 207..207 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[208]}}</u> 
+                </td><td></td></tr>
+                {% for i in 209..210 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[211]}}</u> 
+                </td><td></td></tr>
+                {% for i in 212..212 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[213]}}</u> 
+                </td><td></td></tr>
+                {% for i in 214..215 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <u>{{Texte[216]}}</u> 
+                </td><td></td></tr>
+                {% for i in 217..219 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <b>{{Texte[220]}}</b> 
+                </td><td></td></tr>
+                {% for i in 221..225 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <b>{{Texte[226]}}</b> 
+                </td><td></td></tr>
+                {% for i in 227..228 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table>
+                <tr><td></td><td>
+                    <!--Article (.*)--> <b>{{Texte[229]}}</b> 
+                </td><td></td></tr>
+                {% for i in 230..230 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+                <!-- 231-236 Tablau-->
+            </table>
+            <table style="width:100%">
+                <tr>
+                    <th style="border:0.1px solid black">Entite</th>
+                    <th style="border:0.1px solid black">NOM</th>
+                    <th style="border:0.1px solid black">ROLE</th>
+                    <th style="border:0.1px solid black">CONTACT</th>
+                </tr>
+                <tr>
+                    <td style="border:0.1px solid black">le client</td>
+                    <td style="border:0.1px solid black">Smith</td>
+                    <td style="border:0.1px solid black">43</td>
+                    <td style="border:0.1px solid black">43</td>
+                </tr>
+                <tr>
+                    <td style="border:0.1px solid black">Le Prestataire</td>
+                    <td style="border:0.1px solid black">Jackson</td>
+                    <td style="border:0.1px solid black">57</td>
+                    <td style="border:0.1px solid black">43</td>
+                </tr>
+            </table>
+             <table class="page_break">
+                <tr><td></td><td>
+                    <!--Article (.*)--> <b>{{Texte[237]}}</b> 
+                </td><td></td></tr>
+                {% for i in 238..239 %}
+                <tr>
+                    <td  style="width:2%"></td>
+                    <td>
+                        {{Texte[i]}}
+                        <br><br>
+                    </td>
+                    <td  style="width:2%"></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+             <table style="width:100%">
+                    <tr>
+                        <th> <br><br><br><br></th>
+                        <th> <br><br><br><br></th>
+                    </tr>
+                    <tr>
+                        <td style="width:10%"></td>
+                        <td style="width:40%"> Pour <b>le Prestataire,</b>
+                        </td>
+                        <td style="width:40%">pour <b>le client</b></td>
+                        <td style="width:10%">
+                        </td>
+                    </tr>
+                </table>
+        </body>
+    </html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Notification</title>
+    <style>
+        .class {
+            font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif;
+        }
+    </style>
+</head>
+<body class="class" style="background-color:#f3f3f3;">
+{% block body %}
+    <div style="color:#6E6E6E;padding:20px;margin-left: 8%;margin-right: 8%;">
+        <p style="margin-left: 3%;margin-right: 3%;text-align: justify; font-size: 20px">
+            Le devis numéro {{ bdc.numBdc }} pour la société {{ bdc.resumeLead.customer.raisonSocial }} a été rejeté pour motif "<span style="font-weight: lighter"><i>{{ rejectedBdc.comment }}</i></span>".
+        </p>
+        <p style="margin-left: 3%;margin-right: 3%;text-align: justify; font-size: 20px">
+            Merci de cliquer sur le lien suivant : <a href="https://madacontact.com/crm_actuel/">https://madacontact.com/crm_actuel</a> pour y apporter les modifications nécessaires.
+        </p>
+        <p style="margin-left: 5%;font-size: 20px">Connecter-vous avec votre compte, une fois connecté, merci de cliquer sur le menus « DEVIS ».</p>
+    </div>
+{% endblock %}
+</body>
+</html>

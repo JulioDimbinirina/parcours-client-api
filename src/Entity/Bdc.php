@@ -1,0 +1,779 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\BdcRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
+/**
+ * @ORM\Entity(repositoryClass=BdcRepository::class)
+ */
+class Bdc
+{
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     * @Groups({"get-by-bdc", "uniq", "bdcs", "view", "bdc:lead", "sendtosign", "fiche-client", "via-irm", "update", "status:lead", "inject:cout"})
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(type="string", length=45, nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "bdcs", "status:lead"})
+     */
+    private $numBdc;
+
+    /**
+     * @ORM\Column(type="string", length=45, nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "bdcs"})
+     */
+    private $numVersion;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"get-by-bdc", "update-bdc", "bdcs"})
+     */
+    private $titre;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $adresseFacturation;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $diffusions;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "fiche-client"})
+     */
+    private $dateDebut;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $dateFin;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $cgv;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $cdc;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $resumePrestation;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "bdcs", "status:lead"})
+     */
+    private $dateCreate;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "fiche-client"})
+     */
+    private $dateModification;
+
+    /**
+     * @ORM\OneToMany(targetEntity=BdcOperation::class, mappedBy="bdc", cascade={"persist"})
+     * @Groups({"get-by-bdc", "update-bdc", "fiche-client", "via-irm", "inject:cout"})
+     */
+    private $bdcOperations;
+
+    /**
+     * @ORM\OneToMany(targetEntity=BdcDocument::class, mappedBy="bdc")
+     */
+    private $bdcDocuments;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=SocieteFacturation::class, inversedBy="bdcs", cascade={"persist"})
+     * @ORM\JoinColumn(nullable=true)
+     * @Groups({"update-bdc", "bdcs", "get-by-bdc", "status:lead"})
+     */
+    private $societeFacturation;
+
+	/**
+     * @ORM\ManyToOne(targetEntity=Tva::class, inversedBy="bdcs", cascade={"persist"})
+     * @ORM\JoinColumn(nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc"})
+     */
+    private $tva;
+
+	/**
+     * @ORM\ManyToOne(targetEntity=Devise::class, inversedBy="bdcs", cascade={"persist"})
+     * @ORM\JoinColumn(nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "fiche-client"})
+     */
+    private $devise;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=ResumeLead::class, inversedBy="bdcs", cascade={"persist"})
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"get-by-bdc", "bdcs", "sendtosign", "via-irm", "inject:cout", "saisie:manager"})
+     */
+    private $resumeLead;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=StatutClient::class, inversedBy="bdcs")
+     * @ORM\JoinColumn(nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $statutClient;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=PaysProduction::class, inversedBy="bdcs")
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"get-by-bdc", "bdcs", "fiche-client", "status:lead", "inject:cout"})
+     */
+    private $paysProduction;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=PaysFacturation::class, inversedBy="bdcs")
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"get-by-bdc"})
+     */
+    private $paysFacturation;
+
+	/**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"update-bdc", "get-by-bdc", "fiche-client"})
+     */
+    private $modeReglement;
+
+	/**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"update-bdc", "get-by-bdc"})
+     */
+    private $delaisPaiment;
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     * @Groups({"update-bdc", "bdcs", "status:lead"})
+     */
+    private $margeCible;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Groups({"update-bdc", "bdcs", "bdc:lead", "get-by-bdc", "fiche-client", "status:lead", "inject:cout"})
+     */
+    private $statutLead;
+
+    /**
+     * @ORM\OneToMany(targetEntity=RejectBdc::class, mappedBy="bdc")
+     */
+    private $rejectBdcs;
+
+	/**
+     * @ORM\Column(type="string", length=50)
+     * @Groups({"get-by-bdc"})
+     */
+    private $uniqId;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc", "fiche-client"})
+     */
+    private $dateSignature;
+		
+	/**
+	* @ORM\Column(type="string", length=255, nullable=true)
+	*/
+	private $signaturePackageId;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     * @Groups({"bdcs", "get-by-bdc", "update-bdc",})
+     */
+    private $idMere;
+
+	/**
+     
+	* @ORM\Column(type="string", nullable=true)
+     
+	*/
+    
+	private $signaturePackageComId;
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     * @Groups({"update-bdc", "get-by-bdc"})
+     */
+    private $destinataireSignataire = [];
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     * @Groups({"update-bdc", "get-by-bdc"})
+     */
+    private $destinataireFacture = [];
+    
+	/**
+     
+	* @ORM\Column(type="integer", nullable=true)
+     
+	*/
+    
+	private $clientIrmId;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"get-by-bdc", "update-bdc"})
+     */
+    private $descriptionGlobale;
+
+    /**
+     * @ORM\OneToOne(targetEntity=SuiteProcess::class, mappedBy="bdc", cascade={"persist", "remove"})
+     * @Groups({"get-by-bdc", "update-bdc"})
+     */
+    private $suiteProcess;
+
+    public function __construct()
+    {
+        $this->bdcOperations = new ArrayCollection();
+        $this->bdcDocuments = new ArrayCollection();
+        $this->rejectBdcs = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getNumBdc(): ?string
+    {
+        return $this->numBdc;
+    }
+
+    public function setNumBdc(?string $numBdc): self
+    {
+        $this->numBdc = $numBdc;
+
+        return $this;
+    }
+
+
+
+    public function getNumVersion(): ?string
+    {
+        return $this->numVersion;
+    }
+
+    public function setNumVersion(?string $numVersion): self
+    {
+        $this->numVersion = $numVersion;
+
+        return $this;
+    }
+
+    public function getTitre(): ?string
+    {
+        return $this->titre;
+    }
+
+    public function setTitre(string $titre): self
+    {
+        $this->titre = $titre;
+
+        return $this;
+    }
+
+    public function getAdresseFacturation(): ?string
+    {
+        return $this->adresseFacturation;
+    }
+
+    public function setAdresseFacturation(?string $adresseFacturation): self
+    {
+        $this->adresseFacturation = $adresseFacturation;
+
+        return $this;
+    }
+
+    public function getDiffusions(): ?string
+    {
+        return $this->diffusions;
+    }
+
+    public function setDiffusions(?string $diffusions): self
+    {
+        $this->diffusions = $diffusions;
+
+        return $this;
+    }
+
+    public function getDateDebut(): ?\DateTimeInterface
+    {
+        return $this->dateDebut;
+    }
+
+    public function setDateDebut(?\DateTimeInterface $dateDebut): self
+    {
+        $this->dateDebut = $dateDebut;
+
+        return $this;
+    }
+
+    public function getDateFin(): ?\DateTimeInterface
+    {
+        return $this->dateFin;
+    }
+
+    public function setDateFin(?\DateTimeInterface $dateFin): self
+    {
+        $this->dateFin = $dateFin;
+
+        return $this;
+    }
+
+    public function getCgv(): ?string
+    {
+        return $this->cgv;
+    }
+
+    public function setCgv(?string $cgv): self
+    {
+        $this->cgv = $cgv;
+
+        return $this;
+    }
+
+    public function getCdc(): ?string
+    {
+        return $this->cdc;
+    }
+
+    public function setCdc(?string $cdc): self
+    {
+        $this->cdc = $cdc;
+
+        return $this;
+    }
+
+    public function getResumePrestation(): ?string
+    {
+        return $this->resumePrestation;
+    }
+
+    public function setResumePrestation(?string $resumePrestation): self
+    {
+        $this->resumePrestation = $resumePrestation;
+
+        return $this;
+    }
+
+    public function getDateCreate(): ?\DateTimeInterface
+    {
+        return $this->dateCreate;
+    }
+
+    public function setDateCreate(?\DateTimeInterface $dateCreate): self
+    {
+        $this->dateCreate = $dateCreate;
+
+        return $this;
+    }
+
+    public function getDateModification(): ?\DateTimeInterface
+    {
+        return $this->dateModification;
+    }
+
+    public function setDateModification(?\DateTimeInterface $dateModification): self
+    {
+        $this->dateModification = $dateModification;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BdcOperation[]
+     */
+    public function getBdcOperations(): Collection
+    {
+        return $this->bdcOperations;
+    }
+
+    public function addBdcOperation(BdcOperation $bdcOperation): self
+    {
+        if (!$this->bdcOperations->contains($bdcOperation)) {
+            $this->bdcOperations[] = $bdcOperation;
+            $bdcOperation->setBdc($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBdcOperation(BdcOperation $bdcOperation): self
+    {
+        if ($this->bdcOperations->removeElement($bdcOperation)) {
+            // set the owning side to null (unless already changed)
+            if ($bdcOperation->getBdc() === $this) {
+                $bdcOperation->setBdc(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BdcDocument[]
+     */
+    public function getBdcDocuments(): Collection
+    {
+        return $this->bdcDocuments;
+    }
+
+    public function addBdcDocument(BdcDocument $bdcDocument): self
+    {
+        if (!$this->bdcDocuments->contains($bdcDocument)) {
+            $this->bdcDocuments[] = $bdcDocument;
+            $bdcDocument->setBdc($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBdcDocument(BdcDocument $bdcDocument): self
+    {
+        if ($this->bdcDocuments->removeElement($bdcDocument)) {
+            // set the owning side to null (unless already changed)
+            if ($bdcDocument->getBdc() === $this) {
+                $bdcDocument->setBdc(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getSocieteFacturation(): ?SocieteFacturation
+    {
+        return $this->societeFacturation;
+    }
+
+    public function setSocieteFacturation(?SocieteFacturation $societeFacturation): self
+    {
+        $this->societeFacturation = $societeFacturation;
+
+        return $this;
+    }
+
+	public function getTva(): ?Tva
+                                                                                 	{
+                                                                                 		return $this->tva;
+                                                                                 	}
+
+
+    public function setTva(?Tva $tva): self
+    {
+        $this->tva = $tva;
+
+        return $this;
+    }
+
+	public function getDevise(): ?Devise
+                                                                                 	  {
+                                                                                 		  return $this->devise;
+                                                                                 	  }
+
+
+    public function setDevise(?Devise $devise): self
+    {
+        $this->devise = $devise;
+
+        return $this;
+    }
+
+    public function getResumeLead(): ?ResumeLead
+    {
+        return $this->resumeLead;
+    }
+
+    public function setResumeLead(?ResumeLead $resumeLead): self
+    {
+        $this->resumeLead = $resumeLead;
+
+        return $this;
+    }
+
+    public function getStatutClient(): ?StatutClient
+    {
+        return $this->statutClient;
+    }
+
+    public function setStatutClient(?StatutClient $statutClient): self
+    {
+        $this->statutClient = $statutClient;
+
+        return $this;
+    }
+
+    public function getPaysProduction(): ?PaysProduction
+    {
+        return $this->paysProduction;
+    }
+
+    public function setPaysProduction(?PaysProduction $paysProduction): self
+    {
+        $this->paysProduction = $paysProduction;
+
+        return $this;
+    }
+
+    public function getPaysFacturation(): ?PaysFacturation
+    {
+        return $this->paysFacturation;
+    }
+
+    public function setPaysFacturation(?PaysFacturation $paysFacturation): self
+    {
+        $this->paysFacturation = $paysFacturation;
+
+        return $this;
+    }
+
+	public function getModeReglement(): ?string
+                                        {
+                                             return $this->modeReglement;
+                                        }
+
+
+    public function setModeReglement(string $modeReglement): self
+    {
+        $this->modeReglement = $modeReglement;
+
+        return $this;
+    }
+
+	public function getDelaisPaiment(): ?string
+                                        {
+                                             return $this->delaisPaiment;
+                                        }
+
+
+    public function setDelaisPaiment(string $delaisPaiment): self
+    {
+        $this->delaisPaiment = $delaisPaiment;
+
+        return $this;
+    }
+
+	public function getMargeCible(): ?string
+                                        {
+                                            return $this->margeCible;
+                                        }
+		
+	public function setMargeCible(?string $margeCible): self
+                                        {
+                                            $this->margeCible = $margeCible;
+                                    
+                                            return $this;
+                                        }
+
+    public function getStatutLead(): ?int
+    {
+        return $this->statutLead;
+    }
+
+    public function setStatutLead(?int $statutLead): self
+    {
+        $this->statutLead = $statutLead;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RejectBdc[]
+     */
+    public function getRejectBdcs(): Collection
+    {
+        return $this->rejectBdcs;
+    }
+
+    public function addRejectBdc(RejectBdc $rejectBdc): self
+    {
+        if (!$this->rejectBdcs->contains($rejectBdc)) {
+            $this->rejectBdcs[] = $rejectBdc;
+            $rejectBdc->setBdc($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRejectBdc(RejectBdc $rejectBdc): self
+    {
+        if ($this->rejectBdcs->removeElement($rejectBdc)) {
+            // set the owning side to null (unless already changed)
+            if ($rejectBdc->getBdc() === $this) {
+                $rejectBdc->setBdc(null);
+            }
+        }
+	}
+
+    public function getUniqId(): ?string
+    {
+        return $this->uniqId;
+    }
+
+    public function setUniqId(string $uniqId): self
+    {
+        $this->uniqId = $uniqId;
+
+        return $this;
+    }
+
+    public function getDateSignature(): ?\DateTimeInterface
+    {
+        return $this->dateSignature;
+    }
+
+    public function setDateSignature(?\DateTimeInterface $dateSignature): self
+    {
+        $this->dateSignature = $dateSignature;
+
+        return $this;
+    }
+
+    
+	
+	public function getSignaturePackageId(): ?string                                          
+                           	{
+                           		 
+                           		return $this->signaturePackageId;
+                           	 
+                           	}
+
+    
+
+	public function setSignaturePackageId(?string $signaturePackageId): self                                    
+                           	{
+                           		 
+                           		$this->signaturePackageId = $signaturePackageId;
+                            
+                           		 
+                           		return $this;
+                           	 
+                           	}
+
+    public function getIdMere(): ?int
+    {
+        return $this->idMere;
+    }
+
+    public function setIdMere(?int $idMere): self
+    {
+        $this->idMere = $idMere;
+
+        return $this;
+    }
+
+    
+	
+	public function getSignaturePackageComId(): ?string         
+                           	{
+                           		   
+                           		return $this->signaturePackageComId;
+                           	   
+                           	}
+
+    
+
+	public function setSignaturePackageComId(?string $signaturePackageComId): self               
+                           	{
+                           		   
+                           		$this->signaturePackageComId = $signaturePackageComId;
+                              
+                           		   
+                              
+                           		return $this;
+                           	   
+                           	}
+
+    public function getDestinataireSignataire(): ?array
+    {
+        return $this->destinataireSignataire;
+    }
+
+    public function setDestinataireSignataire(?array $destinataireSignataire): self
+    {
+        $this->destinataireSignataire = $destinataireSignataire;
+
+        return $this;
+    }
+
+    public function getDestinataireFacture(): ?array
+    {
+        return $this->destinataireFacture;
+    }
+
+    public function setDestinataireFacture(?array $destinataireFacture): self
+    {
+        $this->destinataireFacture = $destinataireFacture;
+
+        return $this;
+    }
+
+ 
+		
+	public function getClientIrmId(): ?int
+                               
+                           	{
+                                   
+                           		return $this->clientIrmId;
+                               
+                           	}
+
+    
+
+	public function setClientIrmId(?int $clientIrmId): self
+             {
+                 $this->clientIrmId = $clientIrmId;
+                 return $this;
+             }
+
+    public function getDescriptionGlobale(): ?string
+    {
+        return $this->descriptionGlobale;
+    }
+
+    public function setDescriptionGlobale(?string $descriptionGlobale): self
+    {
+        $this->descriptionGlobale = $descriptionGlobale;
+
+        return $this;
+    }
+
+    public function getSuiteProcess(): ?SuiteProcess
+    {
+        return $this->suiteProcess;
+    }
+
+    public function setSuiteProcess(SuiteProcess $suiteProcess): self
+    {
+        // set the owning side of the relation if necessary
+        if ($suiteProcess->getBdc() !== $this) {
+            $suiteProcess->setBdc($this);
+        }
+
+        $this->suiteProcess = $suiteProcess;
+
+        return $this;
+    }
+}

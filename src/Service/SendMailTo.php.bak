@@ -1,0 +1,88 @@
+<?php
+namespace App\Service;
+
+use App\Entity\Bdc;
+use App\Entity\RejectBdc;
+use App\Repository\BdcRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+
+class SendMailTo extends AbstractController {
+
+    /**
+     * @var \Swift_Mailer
+     */
+    private $mailer;
+
+    /**
+     * @param \Swift_Mailer $mailer
+     */
+    public function __construct(\Swift_Mailer $mailer)
+    {
+        $this->mailer = $mailer;
+    }
+
+    /*
+     * Send email and notification
+     * $exp (Sender email address)
+     * $dest (Destination email address)
+     * $obj (Object or header of message)
+     * $msg (Content of email or message)
+     * $idBdc (BDC id (optional))
+     */
+    public function sendEmail($exp, $dest, $obj, $msg, $idBdc): Response
+    {
+        if ($idBdc == null) {
+            $message = (new \Swift_Message($obj))
+                ->setFrom($exp)
+                ->setTo($dest)
+                ->setBody($msg, 'text/html');
+            $this->mailer->send($message);
+            return $this->json('Email envoyé avec succès ...', 200, [], ['groups' => ['update-bdc']]);
+        } else {
+            $message = (new \Swift_Message($obj))
+                ->setFrom($exp)
+                ->setTo($dest)
+                ->setBody($msg, 'text/html')
+                ->attach(\Swift_Attachment::fromPath($this->getParameter('bdc_dir').'bdc_'.$idBdc.'.pdf'));
+            $this->mailer->send($message);
+            return $this->json('Email envoyé avec succès ...', 200, [], ['groups' => ['update-bdc']]);
+        }
+    }
+
+    public function sendEmailViaTwigTemplate($exp, $dest, $obj, $template, $currentUser, $idBdc, $otherParams = array()): Response
+    {
+        $bdc = $this->getDoctrine()->getRepository(Bdc::class)->find($idBdc);
+        $rejectedBdc = $this->getDoctrine()->getRepository(RejectBdc::class)->findOneBy([
+            'bdc' => $idBdc
+        ]);
+
+        if ($rejectedBdc) {
+            $message = (new \Swift_Message($obj))
+                ->setFrom($exp)
+                ->setTo($dest)
+                ->setBody(
+                    $this->renderView(
+                        $template,
+                        ['bdc' => $bdc, 'rejectedBdc' => $rejectedBdc, 'user' => $currentUser]
+                    ),
+                    "text/html"
+                );
+            $this->mailer->send($message);
+            return $this->json('Email envoyé avec succès ...', 200, [], ['groups' => ['update-bdc']]);
+        } else {
+            $message = (new \Swift_Message($obj))
+                ->setFrom($exp)
+                ->setTo($dest)
+                ->setBody(
+                    $this->renderView(
+                        $template,
+                        ['bdc' => $bdc,  'user' => $currentUser]
+                    ),
+                    "text/html"
+                );
+            $this->mailer->send($message);
+            return $this->json('Email envoyé avec succès ...', 200, [], ['groups' => ['update-bdc']]);
+        }
+    }
+}

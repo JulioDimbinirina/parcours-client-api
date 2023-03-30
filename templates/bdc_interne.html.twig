@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PDF BDC</title>
+    </head>
+    <body>
+        {% block body %}
+	<div>
+		<div style="float:left;">
+			<img src="outsourcia.png"/>
+		</div>
+		<div style="float:left; margin-left: 300px;">
+			BON DE COMMANDE
+		</div>
+		<div style="clear:both"></div>
+		<div>
+			<div style="float:left;">
+				<div>
+					<span style="font-weight:bold;">Numero de BDC:</span> {{ bdc.id }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Date début:</span> {{ bdc.dateDebut | date("d/m/Y") }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Pays de Production:</span> {{ bdc.paysProduction.libelle }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Société de Facturation:</span> {{ bdc.societeFacturation.libelle }}
+				</div>
+				
+				<div>
+					<span style="font-weight:bold;">Marge cible:</span> {{ bdc.margeCible * 100 }}%
+				</div>
+				
+				<div>
+					&nbsp;
+				</div>
+			</div>
+			<div style="float:right;">
+				<div>
+					<span style="font-weight:bold;">Numéro Client:</span> {{ bdc.resumeLead.customer.id }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Raison Sociale:</span> {{ bdc.resumeLead.customer.raisonSocial }}
+				</div>
+				
+				<div>
+					<span style="font-weight:bold;">Marque:</span> {{ bdc.resumeLead.customer.marqueCommercial }}
+				</div>
+				{#
+				<div>
+                <span style="font-weight:bold;">Adresse Facturation:</span> {% if bdc.resumeLead.customer.isAdressFactDiff == 1 %} {{ bdc.resumeLead.customer.adresseFacturation.adresse }} {% else %} {{ bdc.resumeLead.customer.adresse }} {% endif %}
+                  </div>
+				#}
+				<div>
+					<span style="font-weight:bold;">Liste de Diffusion:</span> {{ bdc.diffusions }}
+				</div>
+				
+				<div>
+					<span style="font-weight:bold;">Statut Client:</span> {{ bdc.resumeLead.customer.categorieClient.libelle }}
+				</div>
+				
+			</div>
+		</div>
+		<div style="clear:both"></div>
+		<div>
+		
+			<table border="1" cellspacing="0" cellpadding="0">
+				<tr style="background-color:#E8592E; color:#ffffff; vertical-align: middle; text-align: center;">
+					<td>BUSINESS UNIT</td>
+					<td>FAMILLE</td>
+					<td>OPERATIONS</td>
+					<td>QUANTITÉ</td>
+					<td>PRIX UNITAIRE HT</td>
+					<td>MONTANT HT</td>
+					<td>DEVISES</td>
+					<td>TVA</td>
+					<td>MARCHE</td>
+					<td>IRM</td>
+					<td>SI RENTA</td>
+					<td>SAGE</td>
+					<td>OBJECTIFS</td>
+					<td>DMT</td>
+					<td>PROD/H</td>
+				</tr>
+				{% for bdcOperation in bdc.bdcOperations %}
+				<tr style="vertical-align: middle; text-align: center;">
+					<td>{{ bdcOperation.bu.libelle }}</td>
+					<td>{% if bdcOperation.familleOperation.libelle is defined %} {{ bdcOperation.familleOperation.libelle }} {% endif %}</td>
+					<td>{{ bdcOperation.operation.libelle }}</td>
+					<td>
+						{{ bdcOperation.quantite }}
+					</td>
+					<td>{{ bdcOperation.prixUnit }}</td>
+					<td>
+						{{ bdcOperation.prixUnit * bdcOperation.quantite }}
+					</td>
+					<td>{% if bdc.devise.libelle is defined %} {{ bdc.devise.libelle }} {% endif %}</td>
+					<td>{% if bdc.tva.libelle is defined %} {{ bdc.tva.libelle }} {% endif %}</td>
+					<td>{{ bdcOperation.langueTrt.libelle }}</td>
+					<td>
+					{% if bdcOperation.irm == 1 %}
+						Oui
+					{% else %}
+						Non
+					{% endif %}
+					</td>
+					<td>
+					{% if bdcOperation.siRenta == 1 %}
+						Oui
+					{% else %}
+						Non
+					{% endif %}
+					</td>
+					<td>
+					{% if bdcOperation.sage == 1 %}
+						Oui
+					{% else %}
+						Non
+					{% endif %}
+					</td>
+					<td>
+						{% for objectifQualitatif in bdcOperation.objectifQualitatif %}
+							{{ objectifQualitatif.libelle }}<br/>
+						{% endfor %}
+
+						{% for objectifQuantitatif in bdcOperation.objectifQuantitatif  %}
+							{{ objectifQuantitatif.libelle }}<br/>
+						{% endfor %}
+					</td>
+					<td>{{ bdcOperation.dmt }}</td>
+					<td>
+						{{ bdcOperation.prodParHeure }}
+					</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<br/>
+		<br/>
+		<div>
+			<span style="font-weight:bold;">Date :</span> {{ date_edit }}
+		</div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<br/>
+		<br/>
+		<div>
+			<span style="font-weight:bold;">Signature et cachet client</span>
+		</div>
+	</div>
+	{% endblock %}
+    </body>
+</html>

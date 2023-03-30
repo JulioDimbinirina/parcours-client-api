@@ -1,0 +1,225 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\OperationRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
+/**
+ * @ORM\Entity(repositoryClass=OperationRepository::class)
+ */
+class Operation
+{
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     * @Groups({"get-by-bdc", "update-bdc", "get-fq-id", "ref", "fiche-client", "bdc-operation", "post:read", "inject:cout", "saisie:manager"})
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"get-by-bdc", "update-bdc", "get-fq-id", "ref", "fiche-client", "bdc-operation", "via:irm", "post:read", "inject:cout", "saisie:manager"})
+     */
+    private $libelle;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=FamilleOperation::class, inversedBy="operations")
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"get-by-bdc", "ref"})
+     */
+    private $familleOperation;
+
+    /**
+     * @ORM\OneToMany(targetEntity=LeadDetailOperation::class, mappedBy="operation", orphanRemoval=true)
+     */
+    private $leadDetailOperations;
+
+    /**
+     * @ORM\OneToMany(targetEntity=BdcOperation::class, mappedBy="operation", orphanRemoval=true)
+     */
+    private $bdcOperations;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Tarif::class, mappedBy="operation")
+     */
+    private $tarifs;
+
+    
+
+	/**
+	* @ORM\Column(type="text", nullable=true)
+	*/
+	private $description;
+
+    /**
+     * @ORM\Column(type="string", length=50, nullable=true)
+     * @Groups({"get-by-bdc"})
+     */
+    private $referenceArticle;
+
+    public function __construct()
+    {
+        $this->leadDetailOperations = new ArrayCollection();
+        $this->bdcOperations = new ArrayCollection();
+        $this->tarifs = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getLibelle(): ?string
+    {
+        return $this->libelle;
+    }
+
+    public function setLibelle(string $libelle): self
+    {
+        $this->libelle = $libelle;
+
+        return $this;
+    }
+
+    public function getFamilleOperation(): ?FamilleOperation
+    {
+        return $this->familleOperation;
+    }
+
+    public function setFamilleOperation(?FamilleOperation $familleOperation): self
+    {
+        $this->familleOperation = $familleOperation;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|LeadDetailOperation[]
+     */
+    public function getLeadDetailOperations(): Collection
+    {
+        return $this->leadDetailOperations;
+    }
+
+    public function addLeadDetailOperation(LeadDetailOperation $leadDetailOperation): self
+    {
+        if (!$this->leadDetailOperations->contains($leadDetailOperation)) {
+            $this->leadDetailOperations[] = $leadDetailOperation;
+            $leadDetailOperation->setOperation($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLeadDetailOperation(LeadDetailOperation $leadDetailOperation): self
+    {
+        if ($this->leadDetailOperations->removeElement($leadDetailOperation)) {
+            // set the owning side to null (unless already changed)
+            if ($leadDetailOperation->getOperation() === $this) {
+                $leadDetailOperation->setOperation(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BdcOperation[]
+     */
+    public function getBdcOperations(): Collection
+    {
+        return $this->bdcOperations;
+    }
+
+    public function addBdcOperation(BdcOperation $bdcOperation): self
+    {
+        if (!$this->bdcOperations->contains($bdcOperation)) {
+            $this->bdcOperations[] = $bdcOperation;
+            $bdcOperation->setOperation($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBdcOperation(BdcOperation $bdcOperation): self
+    {
+        if ($this->bdcOperations->removeElement($bdcOperation)) {
+            // set the owning side to null (unless already changed)
+            if ($bdcOperation->getOperation() === $this) {
+                $bdcOperation->setOperation(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Tarif[]
+     */
+    public function getTarifs(): Collection
+    {
+        return $this->tarifs;
+    }
+
+    public function addTarif(Tarif $tarif): self
+    {
+        if (!$this->tarifs->contains($tarif)) {
+            $this->tarifs[] = $tarif;
+            $tarif->setOperation($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTarif(Tarif $tarif): self
+    {
+        if ($this->tarifs->removeElement($tarif)) {
+            // set the owning side to null (unless already changed)
+            if ($tarif->getOperation() === $this) {
+                $tarif->setOperation(null);
+            }
+        }
+
+        return $this;
+    }
+
+
+		
+	public function getDescription(): ?string
+             
+         	{
+                 
+         		return $this->description;
+             
+         	}
+
+
+		
+	public function setDescription(?string $description): self
+             
+         	{
+                 
+         		$this->description = $description;
+         
+                 
+         		return $this;
+             
+         	}
+
+    public function getReferenceArticle(): ?string
+    {
+        return $this->referenceArticle;
+    }
+
+    public function setReferenceArticle(?string $referenceArticle): self
+    {
+        $this->referenceArticle = $referenceArticle;
+
+        return $this;
+    }
+}

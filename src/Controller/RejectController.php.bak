@@ -1,0 +1,142 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\RejectBdc;
+use App\Entity\StatusLead;
+use App\Entity\WorkflowLead;
+use App\Repository\BdcRepository;
+use App\Repository\LeadDetailOperationRepository;
+use App\Repository\RejectBdcRepository;
+use App\Repository\StatusLeadRepository;
+use App\Service\Lead;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+use App\Service\SendMailTo;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+/**
+ * @Route("/api")
+ */
+class RejectController extends AbstractController
+{
+    /**
+     * @Route ("/bdc/rejected/{id}", name="bcd_rejected", methods={"POST"})
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param BdcRepository $bdcRepository
+     * @return Response
+     */
+    public function rejectBcd(int $id, Request $request,EntityManagerInterface $em, BdcRepository $bdcRepository, UserInterface $currentUser, Lead $lead, SendMailTo $sendMailTo, RejectBdcRepository $rejectBdcRepository): Response {
+        try {
+            $bdcrejected = $bdcRepository->find($id);
+
+            if ($bdcrejected) {
+                $dataReject = json_decode($request->getContent(), true);
+                $comment = $dataReject['value'];
+
+                $result = $this->getStatut($bdcrejected->getStatutLead());
+
+                $rejectedBdc = $rejectBdcRepository->findOneBy([
+                    'bdc' => $id
+                ]);
+
+                # Add or update row in rejectBdc table
+                if ($rejectedBdc) {
+                    $rejectedBdc->setComment($comment)
+                        ->setCreatedAt(new \DateTime());
+                    $em->persist($rejectedBdc);
+                    $em->flush();
+                } else {
+                    $bdcReject = new RejectBdc();
+                    $bdcReject->setBdc($bdcrejected)
+                        ->setComment($comment)
+                        ->setCreatedAt(new \DateTime());
+                    $em->persist($bdcReject);
+                    $em->flush();
+                }
+
+                $customerBcd = $bdcrejected->getResumeLead()->getCustomer();
+
+                if ($currentUser->getRoles()[0] == "ROLE_DIRPROD") {
+                    # MAJ champ status lead dans la table Bdc
+                    $lead->updateStatusLeadBdc($id, $result);
+
+                    # Ajout ou MAJ statut client dans la table StatutLead
+                    $lead->updateStatusLeadByCustomer($customerBcd, $result);
+
+                    # Ajout d'une ligne dans la table WorkflowLead
+                    $lead->addWorkflowLead($customerBcd, $result);
+                } elseif ($currentUser->getRoles()[0] == "ROLE_FINANCE") {
+                    # MAJ champ status lead dans la table Bdc
+                    $lead->updateStatusLeadBdc($id, $result);
+
+                    # Ajout ou MAJ statut client dans la table StatutLead
+                    $lead->updateStatusLeadByCustomer($customerBcd, $result);
+
+                    # Ajout d'une ligne dans la table WorkflowLead
+                    $lead->addWorkflowLead($customerBcd, $result);
+                } elseif ($currentUser->getRoles()[0] == "ROLE_DG") {
+                    # MAJ champ status lead dans la table Bdc
+                    $lead->updateStatusLeadBdc($id, $result);
+
+                    # Ajout ou MAJ statut client dans la table StatutLead
+                    $lead->updateStatusLeadByCustomer($customerBcd, $result);
+
+                    # Ajout d'une ligne dans la table WorkflowLead
+                    $lead->addWorkflowLead($customerBcd, $result);
+                }
+
+                $em->flush();
+
+                $commercial = $bdcrejected->getResumeLead()->getCustomer()->getUser();
+
+                $sendMailTo->sendEmailViaTwigTemplate($currentUser->getEmail(), $commercial->getEmail(), "Bon de commande rejeté par ".$currentUser->getUsername(), 'emailContent/rejectNotifForCommercial.html.twig', $currentUser, $id);
+
+                return $this->json('Bon de commande réjeté', 200, [], ['groups' => ['bdcs']]);
+            } else {
+                return $this->json("Ce Bon de commande n'existe pas !", 500, [], []);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @param $statutLeadBdc
+     * @return array|bool|float|int|string|null
+     */
+    private function getStatut($statutLeadBdc) {
+        $statut = null;
+        switch ($statutLeadBdc) {
+            case $this->getParameter('statut_lead_bdc_creer'):
+                $statut = $this->getParameter('statut_lead_bdc_rejeter_dir_prod');
+                break;
+            case $this->getParameter('statut_lead_bdc_valider_dir_prod'):
+                $statut = $this->getParameter('statut_lead_bdc_rejeter_dir_fin');
+                break;
+            case $this->getParameter('statut_lead_bdc_valider_dir_fin'):
+                $statut = $this->getParameter('statut_lead_bdc_rejeter_dg');
+                break;
+            case $this->getParameter('statut_lead_bdc_avenant_creer'):
+                $statut = $this->getParameter('statut_lead_bdc_avenant_rejeter_dir_prod');
+                break;
+            case $this->getParameter('statut_lead_bdc_avenant_valider_dir_prod'):
+                $statut = $this->getParameter('statut_lead_bdc_avenant_rejeter_dir_fin');
+                break;
+            case $this->getParameter('statut_lead_bdc_avenant_valider_dir_fin'):
+                $statut = $this->getParameter('statut_lead_bdc_avenant_rejeter_dg');
+                break;
+        }
+        return $statut;
+    }
+}

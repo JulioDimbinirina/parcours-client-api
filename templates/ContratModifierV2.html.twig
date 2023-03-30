@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Welcome!</title>
+        {# Run `composer require symfony/webpack-encore-bundle`
+           and uncomment the following Encore helpers to start using Symfony UX #}
+            {#{{ encore_entry_link_tags('app') }}#}
+
+            {#{{ encore_entry_script_tags('app') }}#}
+        <style>
+            .page_break {
+                page-break-after: always;
+            }
+            .bordurer{
+                border:1px solid black;
+                border-collapse: collapse;
+            }
+            body{
+                font-size:11pt;
+                font-family:'Calibri';
+            }
+        </style>
+    </head>
+    <body>
+            <table style="width:100%">
+                <tr>
+                    <th></th>
+                    <th style="width:60%">
+                        <h5>
+                            <g>{{ titre }} DE PRESTATION DE SERVICES BON DE COMMANDE SIGNE EN DATE DU  {{DateSignature is defined ? (DateSignature|date("d/m/Y")) : ''}}
+                            </g>
+                        </h5>
+                    </th>
+                    <th></th>
+                </tr>
+            </table>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">Entre les soussignées : <br><br>
+                    La société {{byFront[1]}}, au capital social de {{byFront[2]}}, immatriculée au Registre du Commerce et des Sociétés de {{byFront[3]}}, sous le numéro {{byFront[4]}}, dont le siège social est situé au {{byFront[5]}}, représentée par {{byFront[6]}}, en sa qualité de {{byFront[7]}}, dûment habilité à l’effet des présentes,
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "Prestataire", d'une part,</td> 
+                </tr>
+            </table>
+            <br><br>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">ET: <br><br>La société {{byFront[8]}},au capital social de {{byFront[10]}}, immatriculée au Registre du Commerce et des Sociétés de {{byFront[11]}}, sous le numéro {{byFront[12]}}, dont le siège social est situé au {{byFront[13]}}, représentée par {{byFront[14]}},en sa qualité de {{byFront[15]}}, dûment habilité à l’effet des présentes,<br><br></td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table  style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Ci-après dénommée le "client", d'une part,</td> 
+                </tr>
+            </table>
+            <table class="page_break" style="width:100%">
+                <tr>
+                    <td>Le "Prestataire" et le "client" étant individuellement désignés par une/la « Partie » et conjointement par les « Parties ». </td>
+                </tr>
+            </table>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>LES PARTIES ONT PREALABLEMENT EXPOSE CE QUI SUIT :</th>
+                    <th style="width:20%"></th>
+                </tr>
+            </table>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>Les Parties ont signé en date du 
+                    {{ DateSignature is defined ? (DateSignature|date("d/m/Y")) : '' }}, un bon de commande avec les conditions générales de vente de {{byFront[1]}}, suivant lequel le client met à disposition du
+                    Client une équipe dédiée composée de Développeurs Web confirmés (le « {{byFront[20]}} initial »).
+                    <br><br>
+                    Conformément à la section « Prix » des Conditions Générales de Vente, le montant des Prestations sera révisé chaque année suivant l’indice SYNTEC à la date d’anniversaire du contrat.
+                    <br><br>
+                    Les Parties se sont donc rapprochées afin de définir dans le présent contrat (ci-après (le « {{byFront[20]}} »)  les termes de leur accord.
+                    </td>
+                    <td style="width:2%"> </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>CECI ETANT EXPOSE, IL A ETE CONVENU CE QUI SUIT :</th>
+                    <th style="width:20%"></th>
+                </tr>
+                </table>
+                <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 1 : Objet de l’Avenant.</b>
+                    <br>
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        Le présent avenant a pour objet de mettre à jour la tarification des prestations conformément aux termes des Conditions Générales de Vente.
+                    <br><br>
+                Toutes les dispositions contractuelles non expressément modifiées par les présentes demeurent en vigueur. En cas de contradiction avec celles des présentes, ces dernières prévaudront.  
+                    <br><br>
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 2 : Modification de la section  « Tarification de Production » du Bon de Commande</b> <br>
+
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        Par application de la formule suivante :P1 = P0 x (S1/S0) <br>
+                            Où <br>
+                            P1 = Prix révisé <br>
+                            P0 = Prix d’origine <br>
+                            S0 = Indice SYNTEC de référence retenue à la date contractuelle d’origine = {{hausseClient.dateContrat|date('d-m-Y')}} : {{byFront[21]}} <br>
+                            S1 = Indice du SYNTEC publié à la date de la révision = {{hausseClient.dateContrat|date('d-m-Y')}} : {{byFront[22]}} <br><br>
+
+                            La tarification des Prestations applicable à compter du {{hausseClient.dateAplicatif|date('d-m-Y')}} sera comme suit :
+
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                
+            </table>
+            <br>
+                <table  style="width:100%" class="bordurer page_break" >
+                    <tr>
+                        <th class="bordurer" style="border-style: none;"></th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') -1 }}</th>
+                        <th class="bordurer">Tarif {{ 'now' | date('Y') }}</th>
+                    </tr>
+                    <tr>
+                        <th class="bordurer">Taux horaire</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                        <th class="bordurer">Prix Unitaire en € HT</th>
+                    </tr>
+                    {% for BdcOParIdMere in ligneFacturation %}
+                        {% for BdcO in BdcOParIdMere  %}
+                            {% if BdcO.typeFacturation.id != 7 %}
+                            <tr>
+                                <td class="bordurer">{{ BdcO.operation.libelle }}</td>
+                                <td class="bordurer">{{ BdcO.oldPrixUnit }}</td>
+                                <td class="bordurer">{{ BdcO.prixUnit }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td class="bordurer">{{ BdcO.operation.libelle }} ACTE</td>
+                                <td class="bordurer">{{ BdcO.oldPrixUnitActe }}</td>
+                                <td class="bordurer">{{ BdcO.prixUnitaireActe }}</td>
+                            </tr>
+                               <tr>
+                                <td class="bordurer">{{ BdcO.operation.libelle }} HEURE</td>
+                                <td class="bordurer">{{ BdcO.oldPrixUnitHeure }}</td>
+                                <td class="bordurer">{{ BdcO.prixUnitaireHeure }}</td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        <tr>
+                            <td>
+                                 FIN BDC Numero {{  loop.index }}
+                                <br>
+                            </td>
+                            <td>
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <br><br>
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td><b>Article 3 : Entrée en vigueur</b>
+                        <br>
+                    </td>
+                        <td style="width:2%"> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td>
+                           Le présent avenant entre en vigueur à compter du 1erjuillet 2022.
+                        <br><br>
+                            Fait à Evreux, le [.], en deux (02) exemplaires originaux.
+                        <br><br>
+                        </td>
+                        <td style="width:2%"></td>
+                    </tr>
+                </table>
+
+                <table style="width:100%">
+                    <tr>
+                        <th> <br><br><br><br></th>
+                        <th> <br><br><br><br></th>
+                    </tr>
+                    <tr>
+                        <td style="width:10%"></td>
+                        <td style="width:40%"> 
+                        </td>
+                        <td style="width:40%">{{byFront[24]}}</td>
+                        <td style="width:10%">
+                        </td>
+                    </tr>
+                </table>
+
+
+        </body>
+    </html>

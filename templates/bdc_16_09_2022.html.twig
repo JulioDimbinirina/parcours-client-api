@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PDF BDC</title>
+
+    <style>
+        .page_break{
+            page-break-after:always;
+        }
+        .body {
+            font-family: "Century Gothic";
+            width: 100%;
+            font-weight: normal;
+            font-size: medium;
+        }
+        .sary {
+            width: 680px;
+            border: 2px solid black;
+            vertical-align:middle;
+            margin:0px 10px;
+
+        }
+        header {
+            margin-top: 0px;
+            width: 100%;
+        }
+        .header_left {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            vertical-align: top;
+            margin-left: 5px;
+            text-align: left;
+            width: 33%;
+            height: 7%;
+        }
+        .logo {
+            display: inline-block;
+            vertical-align: top;
+            width: 33%;
+            height: 7%;
+        }
+        .header_right {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            vertical-align: top;
+            text-align: center;
+            width: 33%;
+            height: 7%;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 15px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        th, td {
+            border: 1px solid black;
+        }
+        th {
+            background-color: #E75012;
+            color: white;
+        }
+        aside {
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .table4 {
+            page-break-before: auto;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .budget {
+            background-color: #898993;
+            color: white;
+            width: 20px;
+            text-align: center;
+        }
+        .signature {
+            page-break-inside: avoid;
+            page-break-before: auto;
+            width: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .sign_commercial {
+            display: inline-block;
+            vertical-align: top;
+            width: 50%;
+            text-align: left;
+        }
+        .sign_electro {
+            display: inline-block;
+            vertical-align: top;
+            width: 50%;
+            text-align: left;
+            margin-left: 50px;
+        }
+        .couleur_coordonne {
+            font-size: 14px;
+            #color: green;
+        }
+        .adrr_fact {
+            width: 70%;
+            height: 50px;
+            font-size: medium;
+            #color: green;
+            text-align: center
+        }
+        .desc_glob {
+            text-align: justify;
+            padding-left: 5px;
+            padding-right: 5px
+        }
+        ul {
+            list-style: square;
+            padding-left: 16px;
+            margin-top: 0;
+        }
+        span {
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+<body class="body">
+
+<!--Variable necessaire-->
+{% set tabIdOperationNotView = [12, 1004] %}
+{% set fraisTelecoms = [15] %}
+{% set panne_technique_frais_telecoms = [15, 13, 1005, 1006] %}
+{% set frais_mise_place_telecoms = [15] %}
+{% set malus_bonus = [2,3,4,5,6,7,8,9,10,11] %}
+{% set develop_conseil = [1005, 1006] %}
+{% set bonus_malus_frais_telecoms = [2,3,4,5,6,7,8,9,10,11,15] %}
+{% set formationContinue = 17 %}
+{% set typeFacturationHeure = 3 %}
+{% set typeFacturationActe = 1 %}
+{% set typeFacturationMixte = 7 %}
+{% set panneTechniqueClient = 13 %}
+{% set forfaitMensuelPilotage = 14 %}
+{% set fraisMiseEnPlace = 1 %}
+{% set formationInitial = 16 %}
+{% set isHnoDimanche = 1 %}
+{% set insHnoHorDimanche = 1 %}
+{% set isOffert = 1 %}
+{% set quantiteZero = 0 %}
+
+<!-- L'en tête de notre page PDF -->
+<header>
+    <div class="header_left">
+        <div style="font-size: large">{{ bdc.societeFacturation.libelle is not null ? bdc.societeFacturation.libelle|upper : null }}</div><br/>
+        <div>Commercial référent:</div>
+        {% if bdc.resumeLead.customer.user is not null %}
+            <div>{{ bdc.resumeLead.customer.user.getCurrentUsername ?? null }}</div>
+            <div>{{ bdc.resumeLead.customer.user.email ?? null }}</div>
+            <div>{{ bdc.resumeLead.customer.user.tel ?? null }}</div>
+        {% endif %}
+    </div>
+    <div class="logo">
+        <img src="data:image/jpeg;base64,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" alt="Logo">
+    </div>
+    <div class="header_right">
+        <div>
+            A L'ATTENTION DE : {{ bdc.resumeLead.customer.contacts[0].prenom ?? null }}
+            {{ bdc.resumeLead.customer.contacts[0].nom ?? null }}
+        </div>
+        <div>
+            SOCIETE : {{ bdc.resumeLead.customer.raisonSocial is not null ? bdc.resumeLead.customer.raisonSocial|upper : null }}
+        </div>
+        <div>
+            Marque commerciale : {{ bdc.resumeLead.customer.marqueCommercial ?? null }}
+        </div>
+        <div>Numéro client : {{ bdc.resumeLead.customer.numClient ?? null }}</div>
+        <div>Tél : {{ bdc.resumeLead.customer.contacts[0].tel ?? null }}</div>
+        <div>Email : {{ bdc.resumeLead.customer.contacts[0].email ?? null }}</div>
+    </div>
+</header><br>
+
+<!-- Si le bdc est avenant affiche ceci -->
+{% if avenant is not null %}
+    <br>
+    <div>
+        {{ textNmoins1Version ? textNmoins1Version : null }}
+        <ul style="list-style: circle">
+            <!-- Pour modification tarif -->
+            {% for ligneFact in lignFactAll %}
+                {% if ligneFact.oldPrixUnit is not null %}
+                    <li>Changement de tarif de l'opération <span>{{ ligneFact.operation.libelle ?? null }}</span></li>
+                {% endif %}
+            {% endfor %}
+            <!-- Pour ajout nouvelle operation -->
+            {% for ligneFact in lignFactAll %}
+                {% if ligneFact.avenant == 1 %}
+                    <li>Ajout opération <span>{{ ligneFact.operation.libelle ?? null }}</span></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div> <br>
+{% endif %}
+
+<!-- Section qui englobe le tableau pays de production et numéro du bon de commande -->
+<section>
+    <table>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>N° bon de commande</th>
+            <th>Pays de production</th>
+            <th>Prestation</th>
+            <th>Condition de paiement</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{ bdc.dateCreate is defined ? (bdc.dateCreate|date("d/m/Y")) : '' }}</td>
+            <td>{{ bdc.numBdc ?? null }}</td>
+            <td style="text-align: center">{{ bdc.paysProduction.libelle ?? null}}</td>
+            <td style="text-align: center">{{ bdc.resumeLead.resumePrestation ?? null }}</td>
+            <td>{{ bdc.delaisPaiment ?? null }}</td>
+        </tr>
+        </tbody>
+    </table>
+</section> <br/>
+
+<!-- Section qui affiche la description globale dans le pdf -->
+{% if bdc.descriptionGlobale is not null %}
+<section>
+    <table>
+        <thead>
+        <tr>
+            <th>Description globale</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="desc_glob">{{ bdc.descriptionGlobale ?? null }}</td>
+        </tr>
+        </tbody>
+    </table>
+</section> <br/>
+{% endif %}
+
+<!-- Section qui englobe le 2em tableau ligne de facturation bdc -->
+<section>
+    <table>
+        <thead>
+        <tr>
+            <th>Codes articles</th>
+            <th style="width: 30%">Designation</th>
+            <th style="width: 30%">Description</th>
+            <th>Qté</th>
+            <th>Prix unitaire</th>
+            <th>Montant ({{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }} HT)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if tabBudgetMisePlace is not null %}
+            <tr class="budget">
+                <td colspan="6">BUDGET DE FRAIS DE MISE EN PLACE</td>
+            </tr>
+            {% for bdcOperation in tabBudgetMisePlace %}
+                {% if bdcOperation.operation.id is not null %}
+                    <tr>
+                        <td>{{ bdcOperation.operation.referenceArticle ?? null }}</td>
+                        <td>{{ bdcOperation.operation.libelle ?? null }}</td>
+                        {% if bdcOperation.operation.id == fraisMiseEnPlace %}
+                            <td>{{ bdcOperation.operation.description ?? null }}</td>
+                        {% elseif bdcOperation.operation.id == formationInitial %}
+                            <td>
+                                <ul>
+                                    <li>Durée de la formation client : <strong>{{ bdcOperation.Duree ?? null }} heure(s)</strong></li>
+                                    <li>Taux horaire de formation : <strong>{{ bdcOperation.typeFacturation.id == typeFacturationActe ? (bdcOperation.tarifHoraireCible ?? null)|number_format(2, ',', ' ') : bdcOperation.prixUnit ?? null }} {{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }} HT</strong></li>
+                                    <li>Nombre de ressources à former : <br><strong>{{ bdcOperation.ressourceFormer ?? null }}</strong></li>
+                                    {% if bdcOperation.operation.description is not null %}
+                                        <li><div style="font-size: small; font-style: italic">{{ bdcOperation.operation.description ?? null }}</div></li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        <td>{{ bdcOperation.operation.id == fraisMiseEnPlace ? 'Forfait' : bdcOperation.quantite == quantiteZero ? '' : (bdcOperation.quantite ?? null)}}</td>
+                        <td>{{ (bdcOperation.prixUnit)|number_format(2, ',', ' ') }}</td>
+                        {% if bdcOperation.offert == isOffert %}
+                            <td>Offert</td>
+                        {% else %}
+                            <td>{{ bdcOperation.operation.id == fraisMiseEnPlace ? (bdcOperation.prixUnit|number_format(2, ',', ' ')) : bdcOperation.quantite == quantiteZero ? '' : (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, ',', ' ') }}</td>
+                        {% endif %}
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        <tr class="budget">
+            <td colspan="6">BUDGET DE PRODUCTION MENSUEL</td>
+        </tr>
+        {% for bdcOperation in tabBudgetProduction %}
+            {% if bdcOperation.operation.id is not null %}
+                {% if bdcOperation.operation.id not in tabIdOperationNotView and bdcOperation.operation.id not in malus_bonus %}
+                    <tr>
+                        <td>{{ bdcOperation.operation.referenceArticle ?? null }}</td>
+
+                        {% if bdcOperation.operation.id == panneTechniqueClient %}
+                            <td>
+                                {{ (bdcOperation.operation.libelle ?? null) ~ ' ' ~ (bdc.resumeLead.customer.raisonSocial is not null ? bdc.resumeLead.customer.raisonSocial|upper : null) }}
+                            </td>
+                        {% elseif bdcOperation.valueHno == "Oui" %}
+                            <td>{{ bdcOperation.operation.libelle ?? null }}</td>
+                        {% elseif bdcOperation.isHnoHorsDimanche == insHnoHorDimanche %}
+                            {% if bdcOperation.typeFactHnoMere == typeFacturationMixte %}
+                                <td>{{ bdcOperation.operation.libelle ?? null }} HNO {{ bdcOperation.typeFacturation.id == typeFacturationActe ? " à l'acte." : bdcOperation.typeFacturation.id == typeFacturationHeure ? " à l'heure." : ""  }} (heures de production du lundi au vendredi entre 22h et 05h59)</td>
+                            {% else %}
+                                <td>{{ bdcOperation.operation.libelle ?? null }} HNO (heures de production du lundi au vendredi entre 22h et 05h59)</td>
+                            {% endif %}
+                        {% elseif bdcOperation.isHnoDimanche == isHnoDimanche %}
+                            {% if bdcOperation.typeFactHnoMere == typeFacturationMixte %}
+                                <td>{{ bdcOperation.operation.libelle ?? null }} HNO {{ bdcOperation.typeFacturation.id == typeFacturationActe ? " à l'acte." : bdcOperation.typeFacturation.id == typeFacturationHeure ? " à l'heure." : ""  }} (heures de production du lundi au vendredi entre 22h et 05h59)</td>
+                            {% else %}
+                                <td>{{ bdcOperation.operation.libelle ?? null }} HNO (heures de production du lundi au vendredi entre 22h et 05h59)</td>
+                            {% endif %}
+                        {% else %}
+                            <td>{{ bdcOperation.operation.libelle ?? null }}</td>
+                        {% endif %}
+
+                        {% if bdcOperation.operation.id in fraisTelecoms %}
+                            <td>{{ bdcOperation.operation.description ?? null }}</td>
+                        {% elseif bdcOperation.operation.id == formationContinue %}
+                            <td>{{ bdcOperation.operation.description ?? null }}</td>
+                        {% elseif bdcOperation.operation.id in malus_bonus %}
+                            <td>{{ bdcOperation.description ?? null }}</td>
+                        {% elseif bdcOperation.isHnoHorsDimanche == insHnoHorDimanche %}
+                            <td>{{ descriptionLigneHno }} <strong>{{ bdcOperation.majoriteHnoHorsDimanche ?? null }}%</strong></td>
+                        {% elseif bdcOperation.isHnoDimanche == isHnoDimanche %}
+                            <td>{{ descriptionLigneHno }} <strong>{{ bdcOperation.majoriteHnoDimanche ?? null }}%</strong></td>
+                        {% elseif bdcOperation.operation.id == panneTechniqueClient %}
+                            <td>
+                                <div>Taux horaire à <strong>{{ bdcOperation.typeFacturation.id == typeFacturationActe ? (bdcOperation.tarifHoraireCible ?? null)|number_format(2, ',', ' ') : (bdcOperation.prixUnit)|number_format(2, ',', ' ') }} {{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }} HT</strong></div>
+                                <div style="font-style: italic">{{ bdcOperation.operation.description ?? null }}</div>
+                            </td>
+                        {% elseif bdcOperation.typeFacturation.id == typeFacturationActe %}
+                            <td>
+                                <div style="font-size: 14px">Sur la base des éléments suivants : </div>
+                                <ul>
+                                    <li>Taux horaire de <br><strong>{{ (bdcOperation.tarifHoraireCible ?? null)|number_format(2, ',', ' ') }}</strong> <strong>{{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }} HT</strong></li>
+                                    <li>Temps productif de <br><strong>{{ bdcOperation.tempsProductifs ?? null }} min</strong></li>
+                                    <li>DMT (Durée Moyenne de traitement) de <br><strong>{{ bdcOperation.dmt ?? null }} min</strong></li>
+                                    <li>Objectifs qualitatifs :<br>
+                                        {% if bdcOperation.indicatorQualitatifs is not empty %}
+                                            {% for indicator in bdcOperation.indicatorQualitatifs %}
+                                                <strong>- {{ indicator.objectifQualitatif.libelle ?? null }} {{ indicator.indicator ?? null }}%</strong>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </li>
+                                    <li>Objectifs quantitatifs :<br>
+                                        {% if bdcOperation.indicatorQuantitatifs is not empty %}
+                                            {% for indicator in bdcOperation.indicatorQuantitatifs %}
+                                                <strong>- {{ indicator.objectifQuantitatif.libelle ?? null }} {{ indicator.indicator ?? null }}%</strong>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </td>
+                        {% elseif bdcOperation.typeFacturation.id == typeFacturationHeure %}
+                            <td>
+                                <div>Tarification à l'heure de production sur la base de :</div>
+                                <div>- {{ bdcOperation.nbEtp ?? null }} ETP</div>
+                                <div>- {{ bdcOperation.nbHeureMensuel ?? null }} heures de production/mois/ETP</div>
+                            </td>
+                        {% elseif bdcOperation.typeFacturation.id == typeFacturationMixte %}
+                            <td>
+                                <div style="font-size: 14px">Sur la base des éléments suivants : </div>
+                                <ul>
+                                    <li>Taux horaire de <br><strong>{{ (bdcOperation.tarifHoraireCible ?? null)|number_format(2, ',', ' ') }}</strong> <strong>{{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }} HT</strong></li>
+                                    <li>Heures de production mensuelle de
+                                        <br><strong>- {{ bdcOperation.nbEtp ?? null }} ETP</strong>
+                                        <br><strong>- {{ bdcOperation.nbHeureMensuel ?? null }} heures/mois/Etp</strong>
+                                    </li>
+                                    <li>Contact argumenté sur la base de
+                                        <br><strong>- Productivité par heure : {{ bdcOperation.productiviteActe ?? null }}</strong>
+                                    </li>
+                                    <li>Objectifs qualitatifs :<br>
+                                        {% if bdcOperation.indicatorQualitatifs is not empty %}
+                                            {% for indicator in bdcOperation.indicatorQualitatifs %}
+                                                <strong>- {{ indicator.objectifQualitatif.libelle ?? null }} {{ indicator.indicator ?? null }}%</strong>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </li>
+                                    <li>Objectifs quantitatifs :<br>
+                                        {% if bdcOperation.indicatorQuantitatifs is not empty %}
+                                            {% for indicator in bdcOperation.indicatorQuantitatifs %}
+                                                <strong>- {{ indicator.objectifQuantitatif.libelle ?? null }} {{ indicator.indicator ?? null }}%</strong>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </td>
+                        {% elseif bdcOperation.operation.id in develop_conseil %}
+                            <td>{{ '' }}</td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+
+                        <!-- Quatité -->
+                        {% if bdcOperation.typeFacturation.id == typeFacturationMixte %}
+                            <td style="position: relative">
+                                <div style="position: absolute;top: 18px">{{ bdcOperation.nbEtp * bdcOperation.nbHeureMensuel }}</div><br>
+                                <div style="position: absolute;top: 160px">{{ (bdcOperation.nbEtp * bdcOperation.nbHeureMensuel) * bdcOperation.productiviteActe }}</div>
+                            </td>
+                        {% else %}
+                            <td>
+                                {{ bdcOperation.operation.id in panne_technique_frais_telecoms ? '' : bdcOperation.operation.id == forfaitMensuelPilotage ? 'Forfait' : bdcOperation.operation.id in bonus_malus_frais_telecoms ? '' : bdcOperation.quantite == quantiteZero ? '' : bdcOperation.operation.id == formationContinue ? '' : (bdcOperation.quantite) }}
+                            </td>
+                        {% endif %}
+
+                        <!-- Prix unitaire -->
+                        {% if bdcOperation.typeFacturation.id == typeFacturationMixte %}
+                            <td style="position: relative">
+                                <div style="position: absolute;top: 18px">{{ (bdcOperation.prixUnitaireHeure)|number_format(2, ',', ' ') }}</div><br>
+                                <div style="position: absolute;top: 160px">{{ (bdcOperation.prixUnitaireActe)|number_format(2, ',', ' ') }}</div>
+                            </td>
+                        {% else %}
+                            <td>
+                                {{ bdcOperation.operation.id in bonus_malus_frais_telecoms ? '' : (bdcOperation.prixUnit)|number_format(2, ',', ' ') }}
+                            </td>
+                        {% endif %}
+
+                        <!-- Montant -->
+                        {% if bdcOperation.typeFacturation.id == typeFacturationMixte %}
+                            <td style="position: relative">
+                                <div style="position: absolute;top: 18px">{{ ((bdcOperation.nbEtp * bdcOperation.nbHeureMensuel) * bdcOperation.prixUnitaireHeure)|number_format(2, ',', ' ') }}</div><br>
+                                <div style="position: absolute;top: 160px">{{ ((bdcOperation.nbEtp * bdcOperation.nbHeureMensuel * bdcOperation.productiviteActe) * bdcOperation.prixUnitaireActe)|number_format(2, ',', ' ') }}</div>
+                            </td>
+                        {% else %}
+                            {% if bdcOperation.offert == isOffert %}
+                                <td>Offert</td>
+                            {% elseif bdcOperation.quantite == quantiteZero or bdcOperation.operation.id in develop_conseil or bdcOperation.operation.id in bonus_malus_frais_telecoms or bdcOperation.operation.id == panneTechniqueClient or bdcOperation.operation.id == formationContinue %}
+                                <td>{{ '' }}</td>
+                            {% else %}
+                                <td>{{ (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, ',', ' ') }}</td>
+                            {% endif %}
+                        {% endif %}
+                    </tr>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+<br />
+<br />
+<br />
+<section class="page_break" style="page-break-inside: avoid; page-break-before: auto">
+    <table>
+        <tr>
+            <th style="background-color: white; border: 0px;"></th>
+            <th style="background-color: white; border: 0px;"></th>
+            <th style="padding-left: 25px; padding-right: 25px">Montant HT</th>
+            <th style="padding-left: 25px; padding-right: 25px">TVA</th>
+            <th style="padding-left: 25px;padding-right: 25px">Totaux</th>
+        </tr>
+        <tr>
+            <td style="background-color: #E75012; color: white">BUDGET DE FRAIS DE MISE EN PLACE</td>
+            <td>Budget &nbsp;forfaitaire &nbsp;comme &nbsp;défini &nbsp;ci-dessus</td>
+            <td style="text-align: center">{{ totalHT|number_format(2, ',', ' ') }} {{ bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }}</td>
+            <td style="text-align: center">{{ bdc.tva.libelle ?? null}}</td>
+            <td style="text-align: center">{{ (totalHT + montantTva)|number_format(2, ',', ' ') }} {{  bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }}</td>
+        </tr>
+        <tr>
+            <td style="background-color: #E75012; color: white">BUDGET MENSUEL DE PRODUCTION PREVISIONNEL</td>
+            <td>Montant &nbsp;mensuel &nbsp;de &nbsp;production &nbsp;prévisionnel, &nbsp;évolutif &nbsp;en &nbsp;fonction &nbsp;des &nbsp;volumes &nbsp;confiés &nbsp;chaque &nbsp;mois</td>
+            <td style="text-align: center">{{ totalHT2|number_format(2, ',', ' ') }} {{  bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null}}</td>
+            <td style="text-align: center">{{ bdc.tva.libelle ?? null}}</td>
+            <td style="text-align: center">{{ (totalHT2 + montantTva2)|number_format(2, ',', ' ') }} {{  bdc.devise.libelle is not null ? bdc.devise.libelle|lower : null }}</td>
+        </tr>
+    </table>
+</section>
+
+
+<!-- Section qui contient l'image de la ligne de facturation bonus et malus -->
+{% if bonusMalusImg is not empty %}
+    <section>
+        <table >
+            <thead>
+            <tr>
+                <th colspan="6">BONUS & MALUS</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+        <img class="sary"  src={{ bonusMalusImg }} alt="Description">
+    </section> <br/>
+{% endif %}
+
+<div style="page-break-inside: avoid; page-break-before: auto">
+    <p style="font-style: italic; text-align: justify; font-size: 15px">
+        *Les objectifs théoriques de DMT sont valables au moment de la signature du BDC et donneront lieu à une validation à l'issue des 3 premiers mois de production. Cet Indicateur peut également être amené à évoluer à tout moment sous réserve d’un accord exprès entre les Parties, en raison de changement d’outils, de process, d’enrichissements de script… Dans ce cadre, les objectifs de DMT ainsi que les tarifs à l'acte seront revus et mis à jour via un avenant.
+    </p>
+</div> <br/>
+
+<aside style="page-break-inside: avoid; page-break-before: auto">
+    <div>COORDONNEES BANCAIRES</div>
+    <div>TITULAIRE : <strong class="couleur_coordonne">{{ bdc.societeFacturation.libelle is not null ? bdc.societeFacturation.libelle|upper : null }}</strong></div>
+    <div>DOMICILIATION : <strong class="couleur_coordonne">{% if bdc.societeFacturation.coordoneBancaires[0].domiciliation is defined %} {{ bdc.societeFacturation.coordoneBancaires[0].domiciliation}} {% endif %}</strong></div>
+    <div>RIB : <strong class="couleur_coordonne">{% if bdc.societeFacturation.coordoneBancaires[0].rib is defined %} {{ bdc.societeFacturation.coordoneBancaires[0].rib}} {% endif %}</strong></div>
+</aside> <br/><br/>
+<section style="page-break-inside: avoid; page-break-before: auto">
+    <table class="table4">
+        <tr>
+            <td style="height: 50px">ADRESSE DE FACTURATION</td>
+            {% if bdc.resumeLead.customer.isAdressFactDiff == 1 %}
+                <td class="adrr_fact">
+                    <div>- Adresse: {{ bdc.resumeLead.customer.adresseFacturation.adresse ?? null }}</div>
+                    <div>- CP: {{ bdc.resumeLead.customer.adresseFacturation.cp ?? null }}</div> 
+		    <div>- Ville: {{ bdc.resumeLead.customer.adresseFacturation.ville ?? null }}</div>
+                    <div>- Pays: {{ bdc.resumeLead.customer.adresseFacturation.pays ?? null }}</div>
+                </td>
+            {% else %}
+                <td class="adrr_fact">
+                    {{ bdc.resumeLead.customer.adresse ?? null }}
+                </td>
+            {% endif %}
+        </tr>
+        <tr>
+            <td style="height: 50px">RCS DE L'ÉTABLISSEMENT À FACTURER</td>
+            <td class="adrr_fact">
+                {{ bdc.resumeLead.customer.raisonSocial is not null ? bdc.resumeLead.customer.raisonSocial|upper : null }}
+            </td>
+        </tr>
+    </table>
+</section> <br/>
+<div class="signature">
+    <div class="sign_commercial">
+        <div>BON POUR ACCORD (Commercial outsourcia)</div>
+        <div>SIGNATURE</div>
+    </div>
+    <div class="sign_electro">
+        <div>BON POUR ACCORD (Client)</div>
+        <div>SIGNATURE</div>
+    </div>
+</div>
+</body>
+</html>

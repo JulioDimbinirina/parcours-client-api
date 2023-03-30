@@ -1,0 +1,931 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Bdc;
+use App\Entity\CategorieClient;
+use App\Repository\BdcOperationRepository;
+use App\Repository\BdcRepository;
+use App\Repository\ContactRepository;
+use App\Repository\CategorieClientRepository;
+use App\Repository\UserRepository;
+use App\Service\InjectCoutInSuivirenta;
+use App\Service\Lead;
+use App\Service\SendMailTo;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+class ImportBdcSigneController extends AbstractController
+{
+    /**
+     * @var InjectCoutInSuivirenta
+     */
+    private $injectCoutInSuivirenta;
+
+    /**
+     * @var HttpClientInterface
+     */
+    private $httpClient;
+
+    /**
+     * @var BdcOperationRepository
+     */
+    private $bdcOperationRepository;
+
+    private $entityManager;
+
+    public function __construct(InjectCoutInSuivirenta $injectCoutInSuivirenta,
+                                HttpClientInterface $httpClient,
+                                BdcOperationRepository $bdcOperationRepository,
+                                EntityManagerInterface $entityManager){
+        $this->injectCoutInSuivirenta = $injectCoutInSuivirenta;
+        $this->httpClient = $httpClient;
+        $this->bdcOperationRepository = $bdcOperationRepository;
+        $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @Route("/import/bdc/sign/", name="import_bdc_sign", methods={"GET"})
+     */
+    public function importBdcsign(BdcRepository $bdcRepository, CategorieClientRepository $categClientRepository, UserRepository $user, EntityManagerInterface $em, SendMailTo $sendMailTo, Lead $lead): Response
+    {
+		$bdcs = $bdcRepository->findBdcToSign();
+
+		foreach($bdcs As $bdc) {
+			$response = $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageId());
+			# dump($response); die('');
+			//if (!empty($response) && ($response->state == 'COMPLETE' || $response->state == 'PREPARED')) {
+			if (!empty($response) && ($response->state == 'COMPLETE')) {
+                list($commercialFile, $customerFile, $newStatut) = $this->bdcParams($bdc->getStatutLead());
+
+				$downloaded = file_put_contents($this->getParameter('bdc_dir') . $customerFile . $bdc->getId() . '.zip', $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageId() . '/documents', 'GET', [], false));
+
+				# Unzip file
+				if(!$this->unzip($this->getParameter('bdc_dir') . $customerFile . $bdc->getId() . '.zip', $this->getParameter('bdc_dir')))
+				{
+					die("Unzip tsy mandeha");
+				}
+/*
+				# Renomer le fichier
+				if(!rename($this->getParameter('bdc_dir') . 'bdc_com_' . $bdc->getId() . '.pdf', $this->getParameter('bdc_dir') . 'bdc_' . $bdc->getId() . '.zpdf'))
+				{
+					die("rename tsy mandeha");
+				}
+*/
+				$customer = $bdc->getResumeLead()->getCustomer();
+
+				# Donner une date au champ dateSignature du table Bdc
+				$bdc->setDateSignature(new \DateTime());
+
+				# Envoie d'email au commercial
+				$utilisateur = $customer->getUser();
+
+				$msg = 'Bonjour,<br>Le bon de commande numéro ' . $bdc->getNumBdc() . ' a été signé par ' . $customer->getRaisonSocial() . '.<br>Cordialement,';
+
+				$sendMailTo->sendEmail($this->getParameter('from_email'), $utilisateur->getEmail(), 'Bon de commande signé par ' . $customer->getRaisonSocial(), $msg, null);
+
+				# Injection client et opération dans IRM
+				$this->injectionIrmSuivirenta($bdc);
+
+                # Injection coût vers suivirenta
+                $this->injectCoutInSuivirenta->injectOrUpdateCoutToSuivirenta($bdc, "POST", $this->getParameter('param_injection_cout_in_suivirenta_url'));
+
+                # Injection tarif vers suivirenta
+                $this->injectTarifToSuiviRenta($bdc->getId(), $bdcRepository);
+
+                # MAJ champ status lead dans la table Bdc
+                $lead->updateStatusLeadBdc($bdc->getId(),$newStatut);
+
+                # Ajout ou MAJ statut client dans la table StatutLead
+                $lead->updateStatusLeadByCustomer($customer, $newStatut);
+
+                # Ajout d'une ligne dans la table WorkflowLead
+                $lead->addWorkflowLead($customer, $newStatut);
+
+                # Mise à jour categorie du client à "client"
+                $categClient = $categClientRepository->find(2);
+                $customer->setCategorieClient($categClient);
+
+                $em->persist($bdc);
+                $em->persist($customer);
+                $em->flush();
+
+				# Temporaire. Si fichier bdc_com n'existe pas, alors copier bdc_ vers bdc_com_
+				if(!file_exists($this->getParameter('bdc_dir') . "bdc_com_" . $bdc->getId() . ".pdf"))
+				{
+					copy($this->getParameter('bdc_dir') . "bdc_" . $bdc->getId() . ".pdf", $this->getParameter('bdc_dir') . "bdc_com_" . $bdc->getId() . ".pdf");
+				}
+			} else if ($response->state == 'EXPIRED') {
+				# IGNORE PACKAGE FOR FUTUR PROCESS
+				# die('ato ve');
+			}
+		}
+
+       return $this->json('Bon de commande importe', 200, [], ['groups' => ['view', 'inject:cout']]);
+    }
+
+	/**
+     * @Route("/import/bdc/sign/com/", name="import_bdc_sign_com", methods={"GET"})
+     */
+    public function importBdcsignCom(BdcRepository $bdcRepository, CategorieClientRepository $categClientRepository, UserRepository $user, ContactRepository $contactRepository, EntityManagerInterface $em, SendMailTo $sendMailTo, Lead $lead): Response
+    {
+
+		$bdcs = $bdcRepository->findBdcToSignCom();
+
+        if (!empty($bdcs)) {
+            foreach($bdcs As $bdc) {
+                $response = $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageComId());
+                # var_dump($response); die('');
+                //if (!empty($response) && ($response->state == 'COMPLETE' || $response->state == 'PREPARED')) {
+                if (!empty($response) && ($response->state == 'COMPLETE')) {
+                    list($commercialFile, $customerFile, $newStatut) = $this->bdcParams($bdc->getStatutLead());
+
+                    # $downloaded = file_put_contents($this->getParameter('bdc_dir') . 'bdc_com_' . $bdc->getId() . '.zip', $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageComId() . '/documents', 'GET', [], false));
+                    $downloaded = file_put_contents($this->getParameter('bdc_dir') . $commercialFile . $bdc->getIdMere() . '.zip', $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageComId() . '/documents', 'GET', [], false));
+
+                    # Unzip file
+                    if(!$this->unzip($this->getParameter('bdc_dir') . $commercialFile . $bdc->getIdMere() . '.zip', $this->getParameter('bdc_dir')))
+                    {
+                        die("Unzip tsy mandeha");
+                    }
+
+                    $customer = $bdc->getResumeLead()->getCustomer();
+
+                    # MAJ champ status lead dans la table Bdc
+                    $lead->updateStatusLeadBdc($bdc->getId(), $newStatut);
+
+                    # Ajout ou MAJ statut client dans la table StatutLead
+                    $lead->updateStatusLeadByCustomer($customer, $newStatut);
+
+                    # Ajout d'une ligne dans la table WorkflowLead
+                    $lead->addWorkflowLead($customer, $newStatut);
+
+                    $em->persist($bdc);
+                    $em->persist($customer);
+                    $em->flush();
+
+                    /*
+                    * Envoie Signature au client
+                    */
+
+                    # Recuperation email de contact du client
+                    $contacts = $customer->getContacts();
+
+                    # Recuperation destinataire du BDC
+                    $destinataires = $bdc->getDestinataireSignataire();
+					var_dump($destinataires);
+                    if(empty($destinataires))
+                    {
+                        $destinataires = array();
+
+                        # Recuperation d'un contact destinataire. Temp
+                        foreach($contacts As $contact)
+                        {
+                            $destinataires[] = $contact->getId();
+                        }
+
+                    }
+
+                    # Prendre un contact destinataire
+                    $signataire = array();
+                    foreach($destinataires As $contactId)
+                    {
+                        $contact = $contactRepository->find($contactId);
+						
+                        $signataire["name"] = ($contact->getPrenom() . " " . $contact->getNom()) ?? "";
+                        $signataire["email"] = $contact->getEmail();
+
+                        break;
+                    }
+
+                    $files = [
+                        ['type' => 'doc1', 'fileName' => $customerFile . $bdc->getIdMere() . '.pdf']
+                    ];
+
+                    var_dump($files);
+
+                    $page = $this->nbr_pages($this->getParameter('bdc_dir') . $customerFile . $bdc->getIdMere() . '.pdf');
+                    $this->sendToSign($files, $signataire, $bdc, $em, $page);
+
+                } else if ($response->state == 'EXPIRED') {
+                    # IGNORE PACKAGE FOR FUTUR PROCESS
+                }
+            }
+
+            return $this->json('Bon de commande importe', 200, [], ['groups' => ['view']]);
+        } else {
+            return $this->json('Aucun bon de commande trouve !', 200, [], ['groups' => ['view']]);
+        }
+    }
+
+    /**
+     * @Route("/test/findbdctosign", name="teste_findbdctosign", methods={"GET"})
+     */
+    public function viewBcd(BdcRepository $bdcRepository)
+    {
+        try {
+            //Get BDC
+            $bdc = $bdcRepository->findOneBy([
+                "statutLead" => 8
+            ]);
+
+            /* $entryPoint = 'cirrus/rest/v7/packages/' . $bdc->getSignaturePackageComId();
+
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt_array($curl, [
+                CURLOPT_PORT => $this->getParameter('signdoc_port'),
+                CURLOPT_URL => $this->getParameter('signdoc_url') . $entryPoint,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_POSTFIELDS => json_encode([]),
+                CURLOPT_HTTPHEADER => [
+                    "API-key: " . $this->getParameter('signdoc_api_key'),
+                    "Content-Type: application/json"
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+
+            curl_close($curl);
+            if ($err) {
+                // echo $err;
+                return $this->json($err, 200, [], ['groups' => ['inject:cout']]);
+            }
+            if ($response) {
+                return json_decode($response);
+                // return $this->json($response[''], 200, [], ['groups' => ['inject:cout']]);
+            } */
+
+            if ($bdc){
+                $response = $this->callSignDoc('cirrus/rest/v7/packages/' . $bdc->getSignaturePackageComId());
+
+                if (!empty($response)) {
+                    return $this->json($response->state, 200, [], ['groups' => ['inject:cout']]);
+                } else {
+                    return $this->json($response, 200, [], ['groups' => ['inject:cout']]);
+                }
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function callSignDoc($entryPoint, $method = 'GET', $params = [], $return = 'json')
+	{
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+		curl_setopt_array($curl, [
+			CURLOPT_PORT => $this->getParameter('signdoc_port'),
+			CURLOPT_URL => $this->getParameter('signdoc_url') . $entryPoint,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => "",
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 30,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => $method,
+			CURLOPT_POSTFIELDS => json_encode($params),
+			CURLOPT_HTTPHEADER => [
+				"API-key: " . $this->getParameter('signdoc_api_key'),
+				"Content-Type: application/json"
+			],
+		]);
+
+		$response = curl_exec($curl);
+		$err = curl_error($curl);
+
+		curl_close($curl);
+		if ($err) {
+			echo $err;
+		}
+		if ($return == 'json') {
+			return json_decode($response);
+		} else {
+			return $response;
+		}
+	}
+
+    /**
+     * @param int $statulead
+     * @return array
+     */
+    private function bdcParams(int $statulead): array
+    {
+        $commercialFile = null;
+        $customerFile = null;
+        $newStatut = null;
+
+        switch ($statulead)
+        {
+            case $this->getParameter('statut_lead_bdc_valider_dg'): # Validé par dg
+                $commercialFile = "bdc_com_";
+                $customerFile = "bdc_";
+                $newStatut = $this->getParameter('statut_lead_bdc_signe_com');
+                break;
+            case $this->getParameter('statut_lead_bdc_avenant_valider_dg'): # Avenant validé par dg
+                $commercialFile = "bdc_avenant_com_";
+                $customerFile = "bdc_avenant_";
+                $newStatut = $this->getParameter('statut_lead_bdc_avenant_signe_com');
+                break;
+            case $this->getParameter('statut_lead_bdc_signe_com'): # Signé par commercial
+                $commercialFile = "bdc_com_";
+                $customerFile = "bdc_";
+                $newStatut = $this->getParameter('statut_lead_bdc_signe_client');
+                break;
+            case $this->getParameter('statut_lead_bdc_avenant_signe_com'): # Avenant signé par commercial
+                $commercialFile = "bdc_avenant_com_";
+                $customerFile = "bdc_avenant_";
+                $newStatut = $this->getParameter('statut_lead_bdc_avenant_signe_client');
+                break;
+        }
+
+        return array($commercialFile, $customerFile, $newStatut);
+    }
+
+    /**
+     * @param int|null $paysprod
+     * @return array
+     * Retourne les urls necessaire pour l'injection dans IRM
+     */
+    private function getIRMUrlViaHisPaysProd(int $paysprod = null): array
+    {
+        $IrmClientUrl = null;
+        $IrmOperationUrl = null;
+
+        switch ($paysprod)
+        {
+            case 1: # Pays de production France
+                $IrmClientUrl = $this->getParameter('irm_client_france_url_post');
+                $IrmOperationUrl = $this->getParameter('irm_operation_france_url_post');
+                break;
+            case 2: # Pays de production Maroc
+                $IrmClientUrl = $this->getParameter('irm_client_maroc_url_post');
+                $IrmOperationUrl = $this->getParameter('irm_operation_maroc_url_post');
+                break;
+            case 3: # Pays de production Madagascar
+                $IrmClientUrl = $this->getParameter('irm_client_mada_url_post');
+                $IrmOperationUrl = $this->getParameter('irm_operation_mada_url_post');
+                break;
+            case 4: # Pays de production Niger
+                $IrmClientUrl = $this->getParameter('irm_client_niger_url_post');
+                $IrmOperationUrl = $this->getParameter('irm_operation_niger_url_post');
+                break;
+        }
+
+        return array($IrmClientUrl, $IrmOperationUrl);
+    }
+
+	/**
+	 * Unzip
+	 * @param string $zip_file_path Eg - /tmp/my.zip
+	 * @param string $extract_path Eg - /tmp/new_dir_name
+	 * @return boolean
+	*/
+	private function unzip(string $zip_file_path, string $extract_dir_path) {
+		$zip = new \ZipArchive;
+		$res = $zip->open($zip_file_path);
+		if ($res === TRUE) {
+			$zip->extractTo($extract_dir_path);
+			$zip->close();
+			return TRUE;
+		} else {
+			return FALSE;
+		}
+	}
+
+	private function sendToSign($files, $signataire, $bdc, $em, $page){
+
+		switch($page)
+		{
+			case 1:
+				$top = 61.90625;
+				$left = 330.99609375;
+				$right = 480.23828125;
+				$bottom = 10.16015625;
+				$tabIndex = 0;
+				break;
+			case 2:
+				$top = 81.90625;
+				$left = 330.99609375;
+				$right = 480.23828125;
+				$bottom = 20.16015625;
+				$tabIndex = 0;
+				break;
+			case 3:
+				$top = 461.90625;
+				$left = 330.99609375;
+				$right = 480.23828125;
+				$bottom = 500.16015625;
+				$tabIndex = 0;
+				break;
+			default:
+				$top = 461.90625;
+				$left = 330.99609375;
+				$right = 480.23828125;
+				$bottom = 400.16015625;
+				$tabIndex = 0;
+				break;
+		}
+
+		$documentOptions = [
+			/*
+			'doc1' => [
+				'label' => 'Document 1',
+				'docType' => 'PDF',
+				'widgets' => [
+					[
+						"pageNumber" => 1,
+						"top" => 521.90625,
+						"left" => 351.99609375,
+						"right" => 560.23828125,
+						"bottom" => 460.16015625,
+						"tabIndex" => 0
+					]
+				]
+			],
+			*/
+			/*
+			'doc1' => [
+                'label' => 'Document 1',
+                'docType' => 'PDF',
+                'widgets' => [
+                    [
+                        "pageNumber" => 1,
+                        "top" => 161.90625,
+                        "left" => 70.99609375,
+                        "right" => 460.23828125,
+                        "bottom" => 100.16015625,
+                        "tabIndex" => 0
+                    ]
+                ]
+            ],
+			*/
+			'doc1' => [
+                'label' => 'Document 1',
+                'docType' => 'PDF',
+                'widgets' => [
+                    [
+                        "pageNumber" => $page,
+                        "top" => $top,
+                        "left" => $left,
+                        "right" => $right,
+                        "bottom" => $bottom,
+                        "tabIndex" => $tabIndex
+                    ]
+                ]
+            ],
+			'doc2' => [
+				'label' => 'Document 2',
+				'docType' => 'MS_WORD',
+				'widgets' => [[
+					"pageNumber" => 3,
+					"top" => 113.484375,
+					"left" => 330.24609375,
+					"right" => 516.73828125,
+					"bottom" => 59.98828125,
+					"tabIndex" => 0
+				]]
+			],
+			'doc3' => [
+				'label' => 'Document3',
+				'docType' => 'PDF',
+				'widgets' => []
+			]
+		];
+
+		$encodedFiles = [];
+		foreach ($files as $k => $file) {
+			$options = $documentOptions[$file['type']];
+			if ($options['widgets']) {
+				$encodedFiles[] =
+					[
+						"content" => base64_encode(file_get_contents($this->getParameter('bdc_dir') . $file['fileName'])),
+						"signatureFields" => [
+							[
+								"id" => "signature-" . $k,
+								"signerId" => "signer-1",
+								"signingModeOptions" => ["C2S"],
+								"required" => true,
+								"readOnly" => false,
+								"widgets" => $options['widgets']
+							]
+						],
+						"id" => "document-" . $k,
+						"fileName" => $file['fileName'],
+						"format" => $options['docType'],
+						"name" => $options['label']
+					];
+			} else {
+				$encodedFiles[] =
+					[
+						"content" => base64_encode(file_get_contents($this->getParameter('bdc_dir') . $file['fileName'])),
+						"id" => "document-" . $k,
+						"fileName" => $file['fileName'],
+						"format" => $options['docType'],
+						"name" => $options['label']
+					];
+			}
+		}
+
+		$postParams = [
+			"name" => "[BON DE COMMANDE A SIGNE]",
+			"description" => "[BON DE COMMANDE A SIGNE]",
+			"expirationDate" =>  date('Y-m-d', strtotime('+' . $this->getParameter('package_expiration') . ' month')) . 'T00:00:00Z',
+			"documents" => $encodedFiles,
+			"signingModeOptions" => ["C2S"],
+			"type" => "PACKAGE",
+			"state" => "DRAFT",
+			"processingType" => "PAR",
+			"mailSubject" => 'Bon De Commande à signer de la pars de Outsourcia',
+			"mailMessage" => "Un Bon De Commande vous a été créé.<br/> Merci de cliquer sur le bouton ci-dessous pour passer à la signaturer eléctroniaque SVP.<br/>Cordialement, <br/> Groupe Outsourcia",
+			"inPersonEnabled" => true,
+			"signers" => [
+				[
+					"id" => "signer-1",
+					"role" => "SIGNER",
+					"name" => $signataire['name'],
+					"email" => $signataire['email'],
+				]
+			]
+		];
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+		curl_setopt_array($curl, [
+			CURLOPT_PORT => $this->getParameter('signdoc_port'),
+			CURLOPT_URL => $this->getParameter('signdoc_url') . "cirrus/rest/v7/package",
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => "",
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 30,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => "POST",
+			CURLOPT_POSTFIELDS => json_encode($postParams),
+			CURLOPT_HTTPHEADER => [
+				"API-key: " . $this->getParameter('signdoc_api_key'),
+				"Content-Type: application/json"
+			],
+		]);
+
+		$response = curl_exec($curl);
+		$err = curl_error($curl);
+
+		curl_close($curl);
+
+		if ($err) {
+			var_dump("cURL Error #:" . $err);
+			return false;
+		} else {
+			echo "reponse 1 : <br/>";
+			var_dump($response);
+			var_dump($signataire);
+
+			$response = json_decode($response);
+			if (isset($response->id)) {
+				$curl2 = curl_init();
+				curl_setopt($curl2, CURLOPT_SSL_VERIFYPEER, FALSE);
+				curl_setopt_array($curl2, [
+					CURLOPT_PORT => $this->getParameter('signdoc_port'),
+					CURLOPT_URL => $this->getParameter('signdoc_url') . "cirrus/rest/v7/packages/" . $response->id . "/scheduler",
+					CURLOPT_RETURNTRANSFER => true,
+					CURLOPT_ENCODING => "",
+					CURLOPT_MAXREDIRS => 10,
+					CURLOPT_TIMEOUT => 30,
+					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+					CURLOPT_CUSTOMREQUEST => "POST",
+					CURLOPT_HTTPHEADER => [
+						"API-key: " . $this->getParameter('signdoc_api_key'),
+						"Content-Type: application/json"
+					],
+				]);
+
+				$rep = curl_exec($curl2);
+				$err = curl_error($curl2);
+
+				curl_close($curl2);
+				
+				echo "reponse 2 : <br/>";
+				var_dump($rep);
+
+				//Stocké dans la BDD l'id du package
+				$bdc->setSignaturePackageId($response->id);
+				$em->persist($bdc);
+				$em->flush();
+
+				if ($err) {
+					var_dump("cURL Error #:" . $err);
+					return false;
+				}
+			} else {
+				var_dump($response);
+				return false;
+			}
+		}
+
+		return $response->id;
+	}
+
+	private function nbr_pages($pdf){
+	   if (false !== ($fichier = file_get_contents($pdf))){
+		  $pages = preg_match_all("/\/Page\W/", $fichier, $matches);
+		  return $pages;
+	   }
+	}
+
+	private function injectionIrmSuivirenta($bdc)
+    {
+        try {
+            if ($bdc) {
+                # Variable locale necessaire.......
+                $irmTab = array();
+                $customer = $bdc->getResumeLead()->getCustomer();
+
+                # Recuperation des urls client et operations suivant la pays de production du bdc
+                list($IrmClientUrl, $IrmOperationUrl) = $this->getIRMUrlViaHisPaysProd($bdc->getPaysProduction()->getId());
+
+                /*
+                 * Validation service juridique (cas avenant Bdc signé par le client)
+                 * Injection uniquement des nouvelles opération dans IRM et Suivi Renta
+                */
+                if ($bdc->getStatutLead() == $this->getParameter('statut_lead_bdc_avenant_signe_com')) {
+                    foreach ($bdc->getBdcOperations() as $ligneFact) {
+                        if ($ligneFact->getIrm() == 1 || $ligneFact->getIrm() == true) {
+                            # Injection nouvelle opération dans IRM..................
+                            if ($ligneFact->getAvenant() == 1){
+                                $responseOperation = $this->httpClient->request('POST', $IrmOperationUrl, [
+                                    'body' => [
+                                        'libelle' => $ligneFact->getOperation()->getLibelle(),
+                                        'operation_client_id' => $bdc->getClientIrmId(),
+                                        'Site_id' => '',
+                                        'Prime_base' => '0',
+                                        'Type' => 'PR'
+                                    ]
+                                ]);
+
+                                # Attribuer une valeur au champ IRM dans la table BdcOperation
+                                if ($responseOperation->getStatusCode() == 200) {
+                                    $bdcoperation = $this->bdcOperationRepository->find($ligneFact->getId());
+
+                                    $operationId = str_replace('"', '', $responseOperation->getContent());
+                                    $bdcoperation->setIrmOperation($operationId);
+                                    $this->entityManager->persist($bdcoperation);
+                                    $this->entityManager->flush();
+                                }
+                            }
+                        }
+
+                        # Injection nouvelle opération dans Suivi Renta.............
+                        if ($ligneFact->getSiRenta() == 1 || $ligneFact->getSiRenta() == true) {
+                            $this->httpClient->request('POST', $this->getParameter('suivi_renta_operation_url_post'), [
+                                'body' => [
+                                    'operation1' => $ligneFact->getOperation()->getLibelle(),
+                                    'pays' => $bdc->getPaysProduction()->getLibelle(),
+                                    'bu' => $ligneFact->getBu()->getLibelle(),
+                                    'client' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial()
+                                ]
+                            ]);
+                        }
+                    }
+                } else {
+                    # Injection client dans IRM
+                    $responseClient = $this->httpClient->request('POST', $IrmClientUrl, [
+                        'body' => [
+							'parcours_client_id' => $bdc->getResumeLead()->getCustomer()->getNumClient(),
+							'libelle' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial()
+						]
+                    ]);
+
+					# Mettre dans la table BDC l'id du client irm
+					$clientIdIrm = $responseClient->getContent();
+					$bdc->setClientIrmId(intval(str_replace('"', '', $clientIdIrm)));
+                    $this->entityManager->persist($bdc);
+
+                    foreach ($bdc->getBdcOperations() as $bdcoperation)
+                    {
+						# Inject Operation dans IRM............................
+                        if ($bdcoperation->getIrm() == 1 || $bdcoperation->getIrm() == true) {
+                            $operation = $bdcoperation->getOperation();
+                            $responseOperation = $this->httpClient->request('POST', $IrmOperationUrl, [
+                                'body' => [
+                                    'libelle' => $operation->getLibelle(),
+                                    'operation_client_id' => intval(str_replace('"', '', $clientIdIrm)),
+                                    'Site_id' => '',
+                                    'Prime_base' => '0',
+                                    'Type' => 'PR'
+                                ]
+                            ]);
+
+                            if (($responseClient->getStatusCode() == 200) && ($responseOperation->getStatusCode() == 200)) {
+                                # Attribuer une valeur au champ IRM dans la table Customer
+                                $clientId = intval(str_replace('"', '', $clientIdIrm));
+                                $customer->setIrm($clientId);
+                                $this->entityManager->persist($customer);
+
+                                # Attribuer une valeur au champ IRM dans la table BdcOperation
+                                // $operationId = str_replace('"', '', $responseOperation->getContent());
+                                $IdOperationInIrm = str_replace('"', '', $responseOperation->getContent()); // 89
+                                $bdcoperation->setIrmOperation($IdOperationInIrm);
+                                $this->entityManager->persist($bdcoperation);
+
+                                $this->entityManager->flush();
+                            }
+                            array_push($irmTab, true);
+                        }
+
+                        if ($bdcoperation->getSiRenta() == 1 || $bdcoperation->getSiRenta() == true) {
+                            # Injection Client dans suivi renta....................
+                            $this->httpClient->request('POST', $this->getParameter('suivi_renta_client_url_post'), [
+                                'body' => [
+                                    'client1' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial(),
+                                    'bu' => $bdcoperation->getBu()->getLibelle(),
+                                    'pays' => $bdc->getPaysProduction()->getLibelle(),
+                                    'parcoursclientid' => $bdc->getResumeLead()->getCustomer()->getId(),
+                                ]
+                            ]);
+
+                            # Injection Bu dans suivi renta.....................
+                            $this->httpClient->request('POST', $this->getParameter('suivi_renta_bu_url_post'), [
+                                'body' => [
+                                    'bu1' => $bdcoperation->getBu()->getLibelle(),
+                                    'Pays' => $bdc->getPaysProduction()->getLibelle()
+                                ]
+                            ]);
+
+                            # Injection Operation dans suivi renta.......
+                            $this->httpClient->request('POST', $this->getParameter('suivi_renta_operation_url_post'), [
+                                'body' => [
+                                    'operation1' => $bdcoperation->getOperation()->getLibelle(),
+                                    'pays' => $bdc->getPaysProduction()->getLibelle(),
+                                    'bu' => $bdcoperation->getBu()->getLibelle(),
+                                    'client' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial()
+                                ]
+                            ]);
+                        }
+                    }
+
+					# Injection Pays dans suivi renta....................
+                    if ($bdc->getPaysProduction()->getLibelle() != null) {
+                        $this->httpClient->request('POST', $this->getParameter('suivi_renta_pays_url_post'), [
+                            'body' => [
+                                'pays1' => $bdc->getPaysProduction()->getLibelle()
+                            ]
+                        ]);
+                    }
+                }
+
+                $this->entityManager->flush();
+
+                return array('status' => 200, 'message' => 'Client et Operation injecté dans IRM et Suivi Renta');
+				
+            } else {
+                return array('status' => 200, 'message' => 'BDC VIDE');
+            }
+        } catch (Exception $e) {
+            return array(
+                "status" => 500,
+                "message" => $e->getMessage());
+        }
+    }
+
+    /**
+     * @param $idBdc
+     * @param $bdcRepository
+     */
+    private function injectTarifToSuiviRenta($idBdc, $bdcRepository) {
+        try {
+            // On recupère d'abord le bdc en question
+            $bdc = $bdcRepository->find($idBdc);
+
+            // Logique date de debut et date de fin
+            $dateNow = new \DateTime();
+            $dateDebut =  $dateNow->format("Y").'-'.$dateNow->format("m").'-'.$dateNow->format("d");
+            $dateFin = $dateNow->format("Y").'-'.'12'.'-'.'31';
+
+            if (!empty($bdc)) {
+                foreach ($bdc->getBdcOperations() as $ligneFacturation) {
+
+                    if ($ligneFacturation->getAvenant() == 1) {
+                        // Envoi des données vers api suivi-renta via de requette httpClient (for avenant)
+                        $this->httpClient->request('POST', $this->getParameter('param_inject_tarif_in_suivirenta_url'), [
+                            'body' => [
+                                'pays' => $bdc->getPaysProduction()->getLibelle(),
+                                'bu' => $ligneFacturation->getBu()->getLibelle(),
+                                'client' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial(),
+                                'operation' => $ligneFacturation->getOperation()->getLibelle(),
+                                'date_debut' => $dateDebut,
+                                'date_fin' => $dateFin,
+                                'tarifheure' => ($ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_heure') ? floatval($ligneFacturation->getPrixUnit()) : null),
+                                'tarifacte' => ($ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_acte') ? floatval($ligneFacturation->getPrixUnit()) : null),
+                                'tarifformation' => null,
+                                'tarifheuredimanche' => null,
+                                'tarifactedimanche' => null,
+                                'tarifformationdimanche' => null,
+                                'tarifheurehorsdimanche' => null,
+                                'tarifactehorsdimanche' => null
+                            ]
+                        ]);
+                    } else {
+                        /*
+                         * Ne pas inséré les lignes bonus, malus, frais télécom
+                         *  et Inséré uniquement les lignes de types à l’heure et à l’acte
+                         */
+                        if (!in_array($ligneFacturation->getOperation()->getId(), $this->getParameter('param_id_operation_bonus_malus_frais_telecoms_2'))) {
+
+                        if (in_array($ligneFacturation->getTypeFacturation()->getId(), $this->getParameter('param_id_type_facte_acte_heure'))) {
+
+                            // Logique tarif formation
+                            $tarifFormation = null;
+                            if ($ligneFacturation->getOperation()->getId() == $this->getParameter('param_id_operation_formation_continue')) {
+                                $tarifFormation = floatval($ligneFacturation->getPrixUnit());
+                            }
+
+                            // Logique tarif heure dimanche
+                            $tarifHeureDimanche = null;
+                            if
+                            (
+                                $ligneFacturation->getIsHnoDimanche() == $this->getParameter('param_is_hno') &&
+                                $ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_heure')
+                            ) {
+                                $tarifHeureDimanche = floatval($ligneFacturation->getPrixUnit());
+                            }
+
+                            // Logique tarif acte dimanche
+                            $tarifActeDimanche = null;
+                            if
+                            (
+                                $ligneFacturation->getIsHnoDimanche() == $this->getParameter('param_is_hno') &&
+                                $ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_acte')
+                            )
+                            {
+                                $tarifActeDimanche = floatval($ligneFacturation->getPrixUnit());
+                            }
+
+                            // Logique tarif heure hors dimanche
+                            $tarifHeureHorsDimanche = null;
+                            if
+                            (
+                                $ligneFacturation->getIsHnoHorsDimanche() == $this->getParameter('param_is_hno') &&
+                                $ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_heure')
+                            ) {
+                                $tarifHeureHorsDimanche = floatval($ligneFacturation->getPrixUnit());
+                            }
+
+                            // Logique tarif acte hors dimanche
+                            $tarifActeHorsDimanche = null;
+                            if
+                            (
+                                $ligneFacturation->getIsHnoHorsDimanche() == $this->getParameter('param_is_hno') &&
+                                $ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_acte')
+                            ) {
+                                $tarifActeHorsDimanche = floatval($ligneFacturation->getPrixUnit());
+                            }
+
+                            // Envoi des données vers api suivi-renta via de requette httpClient
+                            if (!empty($ligneFacturation->getBu()) && !empty($ligneFacturation->getOperation())) {
+                                $this->httpClient->request('POST', $this->getParameter('param_inject_tarif_in_suivirenta_url'), [
+                                    'body' => [
+                                        'pays' => $bdc->getPaysProduction()->getLibelle(),
+                                        'bu' => $ligneFacturation->getBu()->getLibelle(),
+                                        'client' => $bdc->getResumeLead()->getCustomer()->getRaisonSocial(),
+                                        'operation' => $ligneFacturation->getOperation()->getLibelle(),
+                                        'date_debut' => $dateDebut,
+                                        'date_fin' => $dateFin,
+                                        'tarifheure' => ($ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_heure') ? floatval($ligneFacturation->getPrixUnit()) : null),
+                                        'tarifacte' => ($ligneFacturation->getTypeFacturation()->getId() == $this->getParameter('param_id_type_fact_acte') ? floatval($ligneFacturation->getPrixUnit()) : null),
+                                        'tarifformation' => $tarifFormation,
+                                        'tarifheuredimanche' => $tarifHeureDimanche,
+                                        'tarifactedimanche' => $tarifActeDimanche,
+                                        'tarifformationdimanche' => null,
+                                        'tarifheurehorsdimanche' => $tarifHeureHorsDimanche,
+                                        'tarifactehorsdimanche' => $tarifActeHorsDimanche
+                                    ]
+                                ]);
+                            }
+                        }
+                    }
+                }
+                }
+                return $this->json(['message' => 'Tarif bien injecté dans suivi renta'], 200, [], []);
+            } else {
+                return $this->json(['message' => 'Le bon de commande est vide'], 400, [], []);
+            }
+        } catch (\Exception $exception) {
+            return $this->json([
+                "status" => 500,
+                "message" => $exception->getMessage()
+            ], 500);
+        }
+    }
+}

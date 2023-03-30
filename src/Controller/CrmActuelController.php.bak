@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\CategorieClient;
+use App\Entity\Contact;
+use App\Entity\Customer;
+use App\Entity\User;
+use App\Repository\CrmActuelRepository;
+use App\Repository\CustomerRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+/**
+ * @Route("/api")
+ */
+class CrmActuelController extends AbstractController
+{
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
+    /**
+     * @var CustomerRepository
+     */
+    private $customerRepository;
+
+    /**
+     * @var CrmActuelRepository
+     */
+    private $crmActuelRepository;
+
+    public function __construct(EntityManagerInterface $entityManager,
+                                CustomerRepository $customerRepository,
+                                CrmActuelRepository $crmActuelRepository){
+        $this->customerRepository = $customerRepository;
+        $this->entityManager = $entityManager;
+        $this->crmActuelRepository = $crmActuelRepository;
+    }
+
+    /**
+     * @Route("/inject/crm_actuel/customer/to/parcours/client", name="inject_data_to_parcours_client", methods={"GET"})
+     */
+    public function injectCustomerToParcoursClient(UserInterface $user): Response
+    {
+        try {
+            $paysprods = $this->crmActuelRepository->getSiteOfProduction();
+
+            $tabRaisonSociale = [];
+
+            $finaleData = [];
+
+            if (!empty($paysprods)){
+                foreach ($paysprods as $paysprod){
+                    if (!empty($paysprod['site_de_production'])){
+                        $res = $this->crmActuelRepository->getSocieteForOneSiteOfProduction($paysprod['site_de_production'], $this->getParameter('limit_client_of_tana_paris_customer'));
+                        $tabRaisonSociale[] = $res;
+                    }
+                }
+            }
+
+            $tabRaisonSociale = array_merge(...$tabRaisonSociale);
+
+            if (!empty($tabRaisonSociale)){
+                foreach ($tabRaisonSociale as $raisonSociale) {
+                    $res = $this->crmActuelRepository->getDataCustomerInCrmActuel($raisonSociale['raison_sociale']);
+                    if (!empty($res)){
+                        $finaleData[] = $res[0];
+                    }
+                }
+            }
+
+            if (!empty($finaleData)){
+                foreach ($finaleData as $data) {
+                    set_time_limit(0);
+                    $this->createNewCustomerAndContact($data, $user);
+                }
+
+                return $this->json("Operation effectue", 200, [], []);
+            } else {
+                return $this->json("Auccun client a ete trouve !", 200, [], []);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/inject/all/crm_actuel/customer/to/parcours/client", name="inject_all_data_to_parcours_client", methods={"GET"})
+     */
+    public function getAllCustomerInCrmActuel(UserInterface $user) {
+		set_time_limit(0);
+        try {
+            $datas = $this->crmActuelRepository->getAllCustomerInCrmActuel();
+
+            if (!empty($datas)) {
+                foreach ($datas as $data) {
+                    set_time_limit(0);
+                    $this->createNewCustomerAndContact($data, $user);
+                }
+
+                return $this->json("Operation effectue !", 200, [], []);
+            } else {
+                return $this->json("Auccun client a ete trouve !", 200, [], []);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    private function createNewCustomerAndContact($data, $user){
+        # Création du contact pour le client en question
+        $contact = new Contact();
+
+        $contact->setCivilite(utf8_encode($data['civilite']));
+        $contact->setNom(utf8_encode($data['nom']));
+        $contact->setPrenom(utf8_encode($data['prenom']));
+        $contact->setFonction(utf8_encode($data['fonction']));
+        $contact->setTel(utf8_encode($data['telephone']));
+        $contact->setEmail(utf8_encode($data['mail']));
+        $contact->setStatus($this->getParameter('statut_lead_client_creer'));
+
+        $customer = $this->customerRepository->findOneBy([
+            'raisonSocial' => utf8_encode($data['societe']),
+            'marqueCommercial' => utf8_encode($data['societe'])
+        ]);
+
+        # Si le client existe déja alors on ajoute un contact, sinon on crée un nouveau
+        if (!empty($customer)) {
+            $customer->addContact($contact);
+
+            $this->entityManager->persist($contact);
+            $this->entityManager->persist($customer);
+        } else {
+            # Nouveau client
+            $customer = new Customer();
+
+            $customer->setCategorieClient($this->getDoctrine()->getRepository(CategorieClient::class)->find($this->getValueOfCategorieClient($data['prospect_suspect'])));
+            $customer->setRaisonSocial(utf8_encode($data['societe']));
+            $customer->setMarqueCommercial(utf8_encode($data['societe']));
+            $customer->setAdresse(utf8_encode($data['adresse']) ?? null);
+            $customer->setCp(utf8_encode($data['cp']) ?? null);
+            $customer->setVille(utf8_encode($data['ville']) ?? null);
+            $customer->setTel(utf8_encode($data['tel_standard']) ?? null);
+            $customer->setPays(utf8_encode($data['pays']) ?? null);
+            $customer->setUser($this->getDoctrine()->getRepository(User::class)->find($user->getId()));
+            $customer->addContact($contact);
+
+            $this->entityManager->persist($contact);
+            $this->entityManager->persist($customer);
+        }
+
+        $this->entityManager->flush();
+    }
+
+    private function getValueOfCategorieClient($prospectSuspect) {
+        $text = strtolower($prospectSuspect);
+        switch ($text)
+        {
+            case 'prospect':
+                return 1;
+                break;
+            case 'client':
+                return 2;
+                break;
+            case 'client perdu':
+                return 3;
+                break;
+            default:
+                return 3;
+        }
+    }
+}

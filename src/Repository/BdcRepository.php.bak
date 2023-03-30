@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Bdc;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+/**
+ * @method Bdc|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Bdc|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Bdc[]    findAll()
+ * @method Bdc[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class BdcRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Bdc::class);
+    }
+
+    public function getMyBdc (int $user) {
+        return $this->createQueryBuilder('b')
+            ->join('b.resumeLead', 'r')
+            ->join('r.customer', 'c')
+            ->join('c.user', 'u')
+            ->where('u.id = :currentUser')
+            ->andWhere('b.numBdc is not null')
+            ->setParameter('currentUser', $user)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+    public function getBdcForDirProd ($roles, int $pays) {
+        switch ($roles[0]) {
+            case "ROLE_DIRPROD":
+                return $this->createQueryBuilder('b')
+                    ->join('b.paysProduction', 'p')
+                    ->where('b.statutLead = :statut')
+                    ->andWhere('p.id = :pays')
+                    ->setParameter('statut', 3)
+                    ->setParameter('pays', $pays)
+                    ->getQuery()
+                    ->getResult()
+                    ;
+                break;
+            case "ROLE_FINANCE":
+                return $this->createQueryBuilder('b')
+                    ->join('b.paysProduction', 'p')
+                    ->where('b.statutLead = :statut')
+                    ->setParameter('statut', 4)
+                    ->getQuery()
+                    ->getResult()
+                    ;
+                break;
+            case "ROLE_DG":
+                return $this->createQueryBuilder('b')
+                    ->join('b.paysProduction', 'p')
+                    ->where('b.statutLead = :statut')
+                    ->setParameter('statut', 6)
+                    ->getQuery()
+                    ->getResult()
+                    ;
+                break;
+        }
+    }
+
+     public function findByUniqId ($value) {
+
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.uniqId = :uniqId')
+            ->setParameter('uniqId', $value)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function findBdcBetweenTwoDate($date1, $date2)
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.dateCreate BETWEEN :date1 AND :date2')
+            ->setParameter('date1', $date1)
+            ->setParameter('date2', $date2)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getBdcForOneCustomer ($idCustomer) {
+        return $this->createQueryBuilder('b')
+            ->join('b.resumeLead', 'r')
+            ->join('r.customer', 'c')
+            ->where('c.id = :customer')
+            ->setParameter('customer', $idCustomer)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+	public function findByNot( array $criteria, array $orderBy = null, $limit = null, $offset = null )
+    {
+        $qb = $this->createQueryBuilder('b');
+        $expr = $this->getEntityManager()->getExpressionBuilder();
+
+        foreach ( $criteria as $field => $value ) {
+
+            $qb->andWhere( $expr->neq( 'b.' . $field, $value ) );
+        }
+/*
+        if ( $orderBy ) {
+
+            foreach ( $orderBy as $field => $order ) {
+
+                $qb->addOrderBy( 'entity.' . $field, $order );
+            }
+        }
+
+        if ( $limit )
+            $qb->setMaxResults( $limit );
+
+        if ( $offset )
+            $qb->setFirstResult( $offset );
+*/
+		
+        return $qb->getQuery()
+            ->getResult();
+    }
+
+	public function findBdcToSign()
+	{
+		/*
+		$qb = $this
+        ->getEntityManager()
+        ->createQuery('SELECT b FROM '.$this->getEntityName().' b WHERE b.signaturePackageId IS NOT NULL AND b.statutLead != 5 AND b.statutLead != 6');
+		*/
+		$qb = $this
+        ->getEntityManager()
+        ->createQuery("SELECT b FROM " . $this->getEntityName() . " b WHERE b.signaturePackageId IS NOT NULL AND b.signaturePackageId != '' AND b.statutLead = 10");
+//die($qb->getSql());
+dump($qb->getResult()); die('');
+		return $qb->getResult();
+	}
+
+	public function findBdcToSignCom()
+	{
+		$qb = $this
+        ->getEntityManager()
+        ->createQuery("SELECT b FROM " . $this->getEntityName() . " b WHERE b.signaturePackageComId IS NOT NULL AND b.signaturePackageComId != '' AND b.statutLead = 8");
+//die($qb->getSql());
+//dump($qb->getResult()); die('');
+		return $qb->getResult();
+	}
+    
+    // /**
+    //  * @return Bdc[] Returns an array of Bdc objects
+    //  */
+    /*
+    public function findByExampleField($value)
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.exampleField = :val')
+            ->setParameter('val', $value)
+            ->orderBy('b.id', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+    */
+
+    /*
+    public function findOneBySomeField($value): ?Bdc
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.exampleField = :val')
+            ->setParameter('val', $value)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+    */
+}

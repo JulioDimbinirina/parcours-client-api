@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PDF BDC</title>
+	<style>
+		.class { 
+			font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; 
+		}
+	</style>
+    </head>
+    <body class="class">
+        {% block body %}
+	<div>
+		<div style="float:left; background-color:#DB3315; color:#ffffff;">
+			{#<img src="https://madacontact.com/parcours_client/bdc/logo_bdc.jpg"/>#}
+			IMPRESISON LOGO EN COURS DE SOLUTION
+		</div>
+		<div style="float:left; margin-left:740px; font-size:26px; font-weight:bold; background-color:#DB3315; color:#ffffff;">
+			BON DE COMMANDE
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="clear:both">&nbsp;</div>
+		<div>
+			<div style="float:left; font-size:13px;">
+				<div>
+					<span style="font-weight:bold;">Numero de BDC:</span> {{ bdc.id }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Date début:</span> {{ bdc.dateDebut | date("d/m/Y") }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Pays de Production:</span> {{ bdc.paysProduction.libelle }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Société de Facturation:</span> {{ bdc.societeFacturation.libelle }}
+				</div>
+				{#
+				<div>
+					Marge cible: {{ bdc.margeCible }}
+				</div>
+				#}
+				<div>
+					&nbsp;
+				</div>
+			</div>
+			<div style="float:right; font-size:13px;">
+				<div>
+					<span style="font-weight:bold;">Numéro Client:</span> {{ bdc.resumeLead.customer.id }}
+				</div>
+				<div>
+					<span style="font-weight:bold;">Raison Sociale:</span> {{ bdc.resumeLead.customer.raisonSocial }}
+				</div>
+				{#
+				<div>
+					Marque: {{ bdc.resumeLead.customer.marqueCommercial }}
+				</div>
+				#}
+				{#
+				<div>
+                   <span style="font-weight:bold;">Adresse Facturation:</span> {% if bdc.resumeLead.customer.isAdressFactDiff == 1 %} {{ bdc.resumeLead.customer.adresseFacturation.adresse }} {% else %} {{ bdc.resumeLead.customer.adresse }} {% endif %}
+                </div>
+				#}
+				<div>
+					<span style="font-weight:bold;">Liste de Diffusion:</span> {{ bdc.diffusions }}
+				</div>
+				{#
+				<div>
+					Statut Client:
+				</div>
+				#}
+			</div>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="clear:both">&nbsp;</div>
+		<div>
+		
+			<table cellspacing="0" cellpadding="0" style="table-layout: auto; width: 100%;">
+				<tr style="background-color:#DB3315; color:#ffffff; vertical-align: middle; text-align: center; font-size:12px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">BUSINESS UNIT</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">FAMILLE</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">OPERATIONS</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">QUANTITÉ</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">PRIX UNITAIRE HT</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">MONTANT HT</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">DEVISES</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">TVA</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">MARCHE</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">OBJECTIFS</td>
+				</tr>
+				{% for bdcOperation in bdc.bdcOperations %}
+				<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.bu.libelle }}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{% if bdcOperation.familleOperation.libelle is defined %} {{ bdcOperation.familleOperation.libelle }} {% endif %}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.operation.libelle }}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+						{{ bdcOperation.quantite }}
+					</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.prixUnit }}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+						{{ bdcOperation.prixUnit * bdcOperation.quantite }}
+					</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{% if bdc.devise.libelle is defined %} {{ bdc.devise.libelle }} {% endif %}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{% if bdc.tva.libelle is defined %} {{ bdc.tva.libelle }} {% endif %}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.langueTrt.libelle }}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+						{% for objectifQualitatif in bdcOperation.objectifQualitatif %}
+							{{ objectifQualitatif.libelle }}<br/>
+						{% endfor %}
+
+						{% for objectifQuantitatif in bdcOperation.objectifQuantitatif  %}
+							{{ objectifQuantitatif.libelle }}<br/>
+						{% endfor %}
+					</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<br/>
+		<br/>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">Date :</span> {{ date_edit }}
+		</div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<div style="clear:both"></div>
+		<br/>
+		<br/>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">Signature et cachet client</span>
+		</div>
+	</div>
+	{% endblock %}
+    </body>
+</html>

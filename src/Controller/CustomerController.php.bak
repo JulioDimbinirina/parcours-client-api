@@ -1,0 +1,779 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Bdc;
+use App\Entity\CategorieClient;
+use App\Entity\ClientDocument;
+use App\Entity\Contact;
+use App\Entity\ContactHasProfilContact;
+use App\Entity\Customer;
+use App\Entity\Historique;
+use App\Entity\MappingClient;
+use App\Entity\ProfilContact;
+use App\Entity\StatusLead;
+use App\Entity\TypeDocument;
+use App\Entity\WorkflowLead;
+use App\Repository\BdcRepository;
+use App\Repository\CustomerRepository;
+use App\Repository\ContactRepository;
+use App\Repository\HistoriqueRepository;
+use App\Repository\TypeDocumentRepository;
+use App\Repository\UserRepository;
+use App\Service\CurrentBase64Service;
+use App\Service\Lead;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\Id;
+use Knp\Component\Pager\PaginatorInterface;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Psr\Container\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use App\Repository\StatusLeadRepository;
+use App\Services\Base64Service;
+
+/**
+ * @Route("/api")
+ */
+class CustomerController extends AbstractController
+{
+    /**
+     * @Route("/customers", name="list_customer", methods={"GET"})
+     */
+    public function getAllCustomer(CustomerRepository $customerRepository): Response
+    {
+        try {
+            return $this->json($customerRepository->findAll(), 200, [],
+                ['groups' => ['customer', 'contact-att', 'cat-attr', 'mapp-attr', 'contact-profil-contact']]);
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+
+    }
+
+    /**
+     * @Route("/customer/list/all", name="customer_list_all", methods={"GET"})
+     * @return Response
+     */
+    public function CustomerListe(CustomerRepository $customerRepository, PaginatorInterface $paginator, UserInterface $user): Response
+    {
+        try {
+            $allCustomers = $customerRepository->getMyAllCustomer($user->getId());
+
+            if (count($allCustomers) > 0) {
+                $paginateCustomer = $paginator->paginate($allCustomers, 1, count($allCustomers));
+
+                return $this->json($allCustomers, 200, [], ['groups' => ['status:lead']]);
+            } else {
+                # Si la liste de client est vide
+                return $this->json("Vide", 200, [], []);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/customer/for/input/list", name="customer_for_input_list", methods={"GET"})
+     * @return Response
+     */
+    public function ListForClientInput(CustomerRepository $customerRepository, PaginatorInterface $paginator, UserInterface $user): Response
+    {
+        try {
+            $allCustomers = $customerRepository->getMyAllCustomer($user->getId());
+
+            $paginateCustomer = $paginator->paginate($allCustomers, 1, count($allCustomers));
+
+            return $this->json($paginateCustomer, 200, [], ['groups' => ['input']]);
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/customer/{id}", name="customer_id", methods={"GET"})
+     * @param int $id
+     * @param CustomerRepository $repository
+     * @return Response
+     */
+    public function getCustomerById(int $id, CustomerRepository $repository): Response
+    {
+        try {
+            $tabObject[] = $repository->find($id);
+            return $this->json($tabObject, 200, [], ['groups' => ['customer', 'contact-att', 'cat-attr', 'mapp-attr', 'contact-profil-contact']]);
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/list/customers/{page}", name="list_customer_page", methods={"GET"})
+     * @param int $page
+     * @return Response
+     */
+    public function getListCustomers(int $page, CustomerRepository $customerRepository, SerializerInterface $serializer, PaginatorInterface $paginator, StatusLeadRepository $statusLeadRepository): Response
+    {
+        try {
+
+            $allcustomer = $customerRepository->findAllCustomer();
+
+            $paginateCustomer = $paginator->paginate($allcustomer, $page, 5);
+
+            return $this->json([count($allcustomer), $paginateCustomer], 200, [], ['groups' => ['customer', 'contact-att', 'cat-attr', 'mapp-attr', 'contact-profil-contact']]);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+
+    }
+
+    /**
+     * @Route("/contact/by/customer/{id}", name="contact_by_customer", methods={"GET"})
+     */
+    public function getContactbyCustomer(int $id, CustomerRepository $customerRepository, ContactRepository $contactRepository, SerializerInterface $serializer): Response
+    {
+        try {
+            $getedCustomer = $customerRepository->find($id);
+            $getedContact = $contactRepository->findBy(['customer' => $getedCustomer]);
+
+            return $this->json([$getedCustomer->getRaisonSocial(), $getedContact], 200, [], ['groups' => ['contact']]);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/bdc/for/one/customer/{id}", name="bdc_for_one_customer", methods={"GET"})
+     */
+    public function getBdcForOneCutomer(int $id, BdcRepository $bdcRepository): Response
+    {
+        try {
+            $res = $bdcRepository->getBdcForOneCustomer($id);
+
+            return $this->json($res, 200, [], ['groups' => ['bdcs']]);
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/export/data/for/commercial", name="export_data_for_commercial", methods={"GET"})
+     */
+    public function exportDataForCommerciale(UserInterface $user): Response
+    {
+        try {
+            $spreadsheet = new Spreadsheet();
+
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->setTitle('Liste des bons de commande');
+
+            $sheet->getCell('A1')->setValue('NUMERO CLIENT');
+            $sheet->getCell('B1')->setValue('RAISON SOCIALE');
+            $sheet->getCell('C1')->setValue('MARQUE COMMERCIALE');
+            $sheet->getCell('D1')->setValue('CATEGORIE CLIENT');
+            $sheet->getCell('E1')->setValue('MAPPING CLIENT');
+            $sheet->getCell('F1')->setValue('NUMERO DU BON DE COMMANDE');
+            $sheet->getCell('G1')->setValue('DATE DE CREATION');
+            $sheet->getCell('H1')->setValue('PAYS DE PRODUCTION');
+            $sheet->getCell('I1')->setValue('DUREE DE TRAITEMENT');
+            $sheet->getCell('J1')->setValue('SOCIETE DE FACTURATION');
+            $sheet->getCell('K1')->setValue('MARGE CIBLE');
+            $sheet->getCell('L1')->setValue('STATUT LEAD');
+            $sheet->getCell('M1')->setValue('AVENANT');
+            $sheet->getCell('N1')->setValue('CONTRAT');
+            $sheet->getCell('O1')->setValue('Registre Traitement RGPD');
+            $sheet->getCell('P1')->setValue('ANNEXE RGPD');
+
+            $sheet->fromArray($this->getBdcToExport($user->getId()), null, 'A2', true);
+
+            $writer = new Xlsx($spreadsheet);
+
+            $filename = 'exported_data_for_commercial_num_'.$user->getId().'.xlsx';
+
+            $writer->save($filename);
+
+            return $this->json($filename, 200, [], ['groups' => ['bdcs']]);
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 500,
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/delete/exported/bdc", name="delete_file", methods={"POST"})
+     */
+    public function deleteExportedFile(Request $request): Response
+    {
+        try {
+            $filename = json_decode($request->getContent(), 'true');
+
+            $file = $this->getParameter('exported_bdc').$filename['filename'];
+            if (file_exists($file)) {
+                unlink($file);
+                return $this->json("La suppression du fichier a ete effectue avec succes", 201, [], []);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/customer", name="post_customer", methods={"POST"})
+     */
+    public function createCustomer(Request $request, EntityManagerInterface $em,
+                                   SerializerInterface $serializer, UserRepository $userRepository, Lead $lead): Response
+    {
+        try {
+            $data = json_decode($request->getContent(), 'true');
+            $contacts = isset($data['contacts']) ? $data['contacts'] : [];
+            $isAdressFactDiff = isset($data['isAdressFactDiff']) ? (int)$data['isAdressFactDiff'] : NULL;
+            unset($data['contacts']);
+            unset($data['isAdressFactDiff']);
+
+            $customer = $serializer->deserialize(json_encode($data), Customer::class, 'json');
+
+            //Ajout client
+            $jsonDecode = json_decode($request->getContent(), true);
+            $cat = $this->getDoctrine()->getRepository(CategorieClient::class)->findOneById($jsonDecode['categorieClientId']);
+            $mapp = $this->getDoctrine()->getRepository(MappingClient::class)->findOneById($jsonDecode['mappingClientId']);
+
+            // $userId = explode($this->getUser()->getSalt())[0];
+
+            $customer->setIsAdressFactDiff($isAdressFactDiff);
+            $customer->setCategorieClient($cat);
+            $customer->setMappingClient($mapp);
+            $customer->setUser($userRepository->find($jsonDecode['userId']));
+
+            // $httpClient = HttpClient::create();
+
+            foreach ($contacts as $contact) {
+                if (isset($contact['contactHasProfilContacts'])) {
+                    unset($contact['contactHasProfilContacts']);
+                }
+                $contactDeserialized = $serializer->deserialize(json_encode($contact), Contact::class, 'json');
+                foreach ($contact['profilContactIds'] as $profilContactId) {
+                    $contactHasProfilContact = new ContactHasProfilContact();
+                    $contactHasProfilContact->setContact($contactDeserialized);
+                    $contactHasProfilContact->setProfilContact($this->getDoctrine()->getRepository(ProfilContact::class)->find($profilContactId));
+                    $em->persist($contactHasProfilContact);
+                }
+
+                # Atribuer une valeur dans la status et customer dans la table contact
+                $contactDeserialized->setStatus(1);
+                $customer->addContact($contactDeserialized);
+
+                # Injection client et contact dans BDD crm_actuel
+                $this->injectClientAndContactToCrmActuel($data, $contact);
+            }
+
+            $em->persist($customer);
+            $em->flush();
+
+            # Get id customer pour pouvoir faire l'ajout fiche qualification ou resumé du lead
+            $idCustomer = $customer->getId();
+
+            # Ajout ou MAJ statut client dans la table StatutLead
+            $lead->updateStatusLeadByCustomer($customer, $this->getParameter('statut_lead_client_creer'));
+
+            # Ajout d'une ligne dans la table WorkflowLead
+            $lead->addWorkflowLead($customer, $this->getParameter('statut_lead_client_creer'));
+
+			# Mettre à jour le numero client
+			$customer->setNumClient($idCustomer);
+			$em->persist($customer);
+            $em->flush();
+
+            return $this->json($idCustomer, 201, [], ['groups' => ['customer']]);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/teste/http/client", name="teste_http_client", methods={"POST"})
+     */
+    public function testehttpclient(Request $request): Response
+    {
+        try {
+            $data = json_decode($request->getContent(), 'true');
+
+            $dataPoste = [
+                'societe' => $data['raisonSocial'],
+                'adresse' => $data['adresse'],
+                'cp' => $data['cp'],
+                'tel_standard' => $data['tel'],
+                'civilite' => $data['civilite'],
+                'prenom' => $data['prenom'],
+                'nom' => $data['nom'],
+                'fonction' => $data['fonction'],
+                'telephone' => $data['telephone'],
+                'mail' => $data['email'],
+                'skype' => $data['skype']
+            ];
+
+            $curl = curl_init();
+
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            // curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            // url_setopt( $curl, CURLOPT_VERBOSE, true);
+            // curl_setopt($curl, CURLOPT_SSLVERSION, 6);
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $this->getParameter('inject_client_contact_to_crm_actuel_url'),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                // CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_0,
+                CURLOPT_CUSTOMREQUEST => "POST",
+                CURLOPT_POSTFIELDS => $dataPoste,
+                CURLOPT_HTTPHEADER => [
+                    "Content-Type: application/json"
+                ],
+            ]);
+
+            curl_exec($curl);
+            $err = curl_error($curl);
+
+            curl_close($curl);
+
+            if ($err) {
+                var_dump("Erreur curl:" . $err);
+                return $this->json("Non ok", 200, [], []);
+            } else {
+                return $this->json("Ok", 200, [], []);
+            }
+
+            // $httpClient = HttpClient::create();
+
+            /*$httpClient->request('POST', $this->getParameter('inject_client_contact_to_crm_actuel_url'), [
+                'json' => [
+                    'societe' => $data['raisonSocial'],
+                    'adresse' => $data['adresse'],
+                    'cp' => $data['cp'],
+                    'tel_standard' => $data['tel'],
+                    'civilite' => $data['civilite'],
+                    'prenom' => $data['prenom'],
+                    'nom' => $data['nom'],
+                    'fonction' => $data['fonction'],
+                    'telephone' => $data['tel'],
+                    'mail' => $data['email'],
+                    'skype' => $data['skype']
+                ]
+            ]);*/
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/update-customer/{id}", name="customer_update", methods={"PUT"})
+     */
+    public function updateCustomer(int $id, Request $request, CustomerRepository $repo,
+                                   EntityManagerInterface $em, ContactRepository $contactRepository, HistoriqueRepository $historiqueRepository,
+                                   SerializerInterface $serializer,
+                                   UserRepository $userRepository): Response
+    {
+        try {
+            $customer = $repo->find($id);
+            if ($customer) {
+                $data = json_decode($request->getContent(), true);
+                $contactsArray = isset($data['contacts']) ? $data['contacts'] : [];
+                unset($data['contacts']);
+
+                /*
+				* delete contact
+				*/
+				# Supprimer d'abord les historiques du statut des contacts
+				$historiqueRepository->deleteByContacts($customer->getContacts());
+
+				# Ensuite supprimer les contacts
+                $contactRepository->deleteByCustomerId($customer->getId());
+
+                $serializer->deserialize(
+                    json_encode($data),
+                    Customer::class,
+                    'json',
+                    [
+                        'object_to_populate' => $customer
+                    ]
+                );
+
+                $customer->setCategorieClient($this->getDoctrine()->getRepository(CategorieClient::class)->find($data['categorieClientId']));
+                $customer->setMappingClient($this->getDoctrine()->getRepository(MappingClient::class)->find($data['mappingClientId']));
+                // $customer->setStatusLead($this->getDoctrine()->getRepository(StatusLead::class)->find($data['statusLead'] ?? null));
+                $customer->setUser($userRepository->find($data['userId']));
+
+				$customer->setNumClient($id);
+
+                foreach ($contactsArray as $contact) {
+                    if (isset($contact['contactHasProfilContacts'])) {
+                        unset($contact['contactHasProfilContacts']);
+                    }
+
+                    $contactDeserialized = $serializer->deserialize(json_encode($contact), Contact::class, 'json');
+					$contactDeserialized->setStatus(1);
+                    foreach ($contact['profilContactIds'] as $profilContactId) {
+                        $contactHasProfilContact = new ContactHasProfilContact();
+                        $contactHasProfilContact->setContact($contactDeserialized);
+                        $contactHasProfilContact->setProfilContact($this->getDoctrine()->getRepository(ProfilContact::class)->find($profilContactId));
+                        $em->persist($contactHasProfilContact);
+                    }
+                    $customer->addContact($contactDeserialized);
+                }
+
+                $em->persist($customer);
+                $em->flush();
+
+                # Get id customer pour pouvoir faire l'ajout fiche qualification ou resumé du lead
+                $customerId = $customer->getId();
+
+                return $this->json($customerId, 200, [], ['groups' => ['update']]);
+            } else {
+                return $this->json([
+                    'message' => 'Item not found.'
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route ("/save/document", name="save_customer_doc", methods={"POST"})
+     * @param Request $request
+     * @param EntityManagerInterface $entityManager
+     * @return Response
+     * Import document client.........................
+     */
+    public function saveCustomerDocument(Request $request, EntityManagerInterface $entityManager): Response {
+        try {
+            $jsonRecu = json_decode($request->getContent(), true);
+            $doc = new ClientDocument();
+
+            if (isset($jsonRecu)) {
+                $doc->setDateSignature(isset($jsonRecu['dateSignature']) ? (\DateTime::createFromFormat('Y-m-d', $jsonRecu['dateSignature'])) : null);
+                $doc->setDateDebutPriseCompte(isset($jsonRecu['dateDebutPriseCompte']) ? (\DateTime::createFromFormat('Y-m-d', $jsonRecu['dateDebutPriseCompte'])) : null);
+                $doc->setDateFinPriseCompte(isset($jsonRecu['dateFinPriseCompte']) ? (\DateTime::createFromFormat('Y-m-d', $jsonRecu['dateFinPriseCompte'])) : null);
+                $doc->setTypeDocument($this->getDoctrine()->getRepository(TypeDocument::class)->find($jsonRecu['type'] ?? null));
+                $doc->setCustomer($this->getDoctrine()->getRepository(Customer::class)->find($jsonRecu['customer']));
+
+                # Upload file
+                $base64service = new CurrentBase64Service();
+                $file = $base64service->convertToFile($jsonRecu['name'], $this->getParameter('customer_document_file_dir'), 'DOC_');
+
+                $doc->setName($file);
+
+                $entityManager->persist($doc);
+            }
+
+            $entityManager->flush();
+
+            return $this->json($doc, 200, [], ['groups' => ['document']]);
+        } catch (\Exception $exception) {
+            return $this->json([
+                "status" => 500,
+                "message" => $exception->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route ("/type/documents", name="type_document", methods={"GET"})
+     * @param TypeDocumentRepository $repository
+     * @return Response
+     * Get tous les données dans la table typeDocument
+     */
+    public function getTypeDocuments(TypeDocumentRepository $repository): Response {
+        try {
+            return $this->json($repository->findAll(), 200, [], ['groups' => ['type-doc']]);
+        } catch (\Exception $exception) {
+            return $this->json([
+                "status" => 500,
+                "message" => $exception->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/download/document/{name}", name="download_doc", methods={"GET"})
+     */
+    public function dowloadDocument(string $name): Response
+    {
+        try {
+            return $this->file('https://madacontact.com/parcours_client/bdc/DOC_6214dbd5a45287.12590893.pdf', 'myPdf.pdf');
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * @Route("/remove-customer/{id}", name="customer_remove", methods={"DELETE"})
+     */
+    public function deleteCustomer(int $id, CustomerRepository $repo,
+                                   EntityManagerInterface $em): Response
+    {
+        try {
+            $customer = $repo->find($id);
+            $em->remove($customer);
+            $em->flush();
+
+            return $this->json(["status" => 200, "message" => "resource deleted successfully !"], 200);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                "status" => 400,
+                "message" => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    private function getBdcToExport(int $userId): array
+    {
+        $data = [];
+
+        $customers = $this->getDoctrine()->getRepository(Customer::class)->getMyAllCustomer($userId);
+
+        if(count($customers) > 0) {
+            foreach ($customers as $customer) {
+                if (count($customer->getResumeLeads()) > 0) {
+                    foreach ($customer->getResumeLeads() as $resumeLead) {
+                        foreach ($resumeLead->getBdcs() as $bdc) {
+                            $data[] = [
+                                $customer->getId(),
+                                $customer->getRaisonSocial(),
+                                $customer->getMarqueCommercial(),
+                                $customer->getCategorieClient()->getLibelle(),
+                                $customer->getMappingClient()->getLibelle(),
+                                $bdc->getNumBdc() ? $bdc->getNumBdc() : "",
+                                $bdc->getDateCreate(),
+                                $bdc->getPaysProduction()->getLibelle(),
+                                $resumeLead->getDureeTrt() ? $resumeLead->getDureeTrt()->getLibelle() : "",
+                                $bdc->getSocieteFacturation() ? $bdc->getSocieteFacturation()->getLibelle() : "",
+                                $bdc->getMargeCible() ? (round($bdc->getMargeCible() * 100).' %') : "",
+                                $bdc->getStatutLead() ? $this->statusLeadValue($bdc->getStatutLead()) : "",
+                                $this->getAvenantValueToExcelColumn($bdc->getStatutLead()),
+                                '"Dev à faire"',
+                                '"Dev à faire"',
+                                'Oui'
+                            ];
+                        }
+                    }
+                } else {
+                    $data[] = [
+                        $customer->getId(),
+                        $customer->getRaisonSocial(),
+                        $customer->getMarqueCommercial(),
+                        $customer->getCategorieClient()->getLibelle(),
+                        $customer->getMappingClient()->getLibelle(),
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        '"Dev à faire"',
+                        '"Dev à faire"',
+                        'Oui'
+                    ];
+                }
+            }
+            return $data;
+        }
+    }
+
+    private function getAvenantValueToExcelColumn($statutLead): string
+    {
+        $avenantStates = [12, 13, 14, 15, 16, 17, 18, 19, 20];
+        if (in_array($statutLead, $avenantStates)) {
+            return "Oui";
+        } else {
+            return "Non";
+        }
+    }
+
+    private function injectClientAndContactToCrmActuel($data, $contact)
+    {
+
+        $dataPoste = [
+            'societe' => $data['raisonSocial'],
+            'adresse' => $data['adresse'],
+            'cp' => $data['cp'],
+            'tel_standard' => $data['tel'],
+            'civilite' => $contact['civilite'],
+            'prenom' => $contact['prenom'],
+            'nom' => $contact['nom'],
+            'fonction' => $contact['fonction'],
+            'telephone' => $contact['tel'],
+            'mail' => $contact['email'],
+            'skype' => $contact['skype']
+        ];
+
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+		curl_setopt($ch, CURLOPT_SSLVERSION, 6);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $this->getParameter('inject_client_contact_to_crm_actuel_url'),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode($dataPoste),
+            CURLOPT_HTTPHEADER => [
+                "Content-Type: application/json"
+            ],
+        ]);
+
+        curl_exec($curl);
+        curl_close($curl);
+
+        /*$httpClient->request('POST', $this->getParameter('inject_client_contact_to_crm_actuel_url'), [
+            'json' => [
+                'societe' => $data['raisonSocial'],
+                'adresse' => $data['adresse'],
+                'cp' => $data['cp'],
+                'tel_standard' => $data['tel'],
+                'civilite' => $contact['civilite'],
+                'prenom' => $contact['prenom'],
+                'nom' => $contact['nom'],
+                'fonction' => $contact['fonction'],
+                'telephone' => $contact['tel'],
+                'mail' => $contact['email'],
+                'skype' => $contact['skype']
+            ]
+        ]);*/
+        // return $response->getStatusCode();
+    }
+
+    private function statusLeadValue($statutLead): string
+    {
+        switch ($statutLead)
+        {
+            case -1:
+                return 'BDC créé en brouillon';
+                break;
+            case 1:
+                return 'Client créé';
+                break;
+            case 2:
+                return 'Fiche qualification créé';
+                break;
+            case 3:
+                return 'A valider par Dir Prod';
+                break;
+            case 4:
+                return 'A valider par le Ser. Fin.';
+                break;
+            case 5:
+                return 'A modifier suite au rejet Dir Prod';
+                break;
+            case 6:
+                return 'A valider par le DG';
+                break;
+            case 7:
+                return 'A modifier suite au rejet Ser. Fin.';
+                break;
+            case 8:
+                return 'A signer par le commercial';
+                break;
+            case 9:
+                return 'A modifier suite au rejet du DG';
+                break;
+            case 10:
+                return 'Signé par le commercial';
+                break;
+            case 11:
+                return 'En production';
+                break;
+            case 12:
+                return 'Avenant à valider par Dir. Prod.';
+                break;
+            case 13:
+                return 'Avenant à valider par Dir. Fin.';
+                break;
+            case 14:
+                return 'Avenant rejeté par Dir. Prod.';
+                break;
+            case 15:
+                return 'Avenant à valider par DG';
+                break;
+            case 16:
+                return 'Avenant rejeté par Dir. Fin';
+                break;
+            case 17:
+                return 'A Signer par le commercial';
+                break;
+            case 18:
+                return 'Avenant rejeté par DG';
+                break;
+            case 19:
+                return 'Avenant signé par le commercial';
+                break;
+            case 20:
+                return 'Avenant signé par le Client';
+                break;
+            case 21:
+                return 'Bon de commande perdu';
+                break;
+            case 22:
+                return 'A valider par le Dir. Prod.';
+                break;
+            default:
+                return 'Fiche qualification créé';
+        }
+    }
+}

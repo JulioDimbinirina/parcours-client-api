@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Welcome!</title>
+        {# Run `composer require symfony/webpack-encore-bundle`
+           and uncomment the following Encore helpers to start using Symfony UX #}
+            {#{{ encore_entry_link_tags('app') }}#}
+
+            {#{{ encore_entry_script_tags('app') }}#}
+        <style>
+            .page_break {
+                page-break-after: always;
+            }
+            .bordurer{
+                border:1px solid black;
+                border-collapse: collapse;
+            }
+            body{
+                font-size:11pt;
+                font-family:'Calibri';
+            }
+        </style>
+    </head>
+    <body>
+            <table style="width:100%">
+                <tr>
+                    <th></th>
+                    <th style="width:60%">
+                        <h5>
+                            <g>{{ titre }} FOR THE PROVISION OF SERVICES ORDER FORM SIGNED DATED
+ {{ DateSignature is defined ? (DateSignature|date("d/m/Y")) : '' }}
+                            </g>
+                        </h5>
+                    </th>
+                    <th></th>
+                </tr>
+                </table>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">Between the undersigned : <br><br>
+                    <b>{{Societe ?? null}}</b>, {{form_juridique}} to the capital of {{capital ?? null}} , registered in the Trade Register
+                    and companies of {{SocieteFacture.ville ?? null}} under the number  {{numeroFiscal ?? null}}, whose head office is located at {{adresse ?? null}}, {{ville ?? null}}
+                    , represented by {{ bdc.resumeLead.customer.user.getCurrentUsername ?? null }}, in his quality of  {{Fonction}}, duly authorized for the purposes hereof,
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Hereinafter referred to as the "Service Provider", on the one hand,</td> 
+                </tr>
+            </table>
+            <br><br>
+            <table style="width:100%">
+                <tr>
+                    <td></td>
+                    <td style="width:90%">ET : <br><br>
+                    <b>{{ bdc.resumeLead.customer.raisonSocial is not null ? bdc.resumeLead.customer.raisonSocial|upper : null }}</b>, to the share capital of {{bdc.resumeLead.customer.cp ?? null}} ,
+                    whose head office is located at {{bdc.resumeLead.customer.adresse ?? null}} , registered in the Commercial Register {{registreNumero}}
+                    and companies of {{bdc.resumeLead.customer.ville ?? null}} under the number {{registreNumero ?? null}}, whose head office is located at {{adresse ?? null}}, {{ville ?? null}}
+                    , represented by {{MrsRepresente}},in his quality of  {{bdc.resumeLead.customer.categorieClient.libelle ?? null}}, duly authorized for the purposes hereof,
+                    </td>
+                    <td></td>
+                </tr>
+            </table>
+            <br>
+            <table  style="width:100%">
+                <tr>
+                    <td style="width:55%"></td>
+                    <td>Hereinafter referred to as the "{{CathegorieClient}}", Firstly,</td> 
+                </tr>
+            </table>
+            <table class="page_break" style="width:100%">
+                <tr>
+                    <td>The "Provider" and the {{CathegorieClient}}being individually designated by a/the “Party” and jointly by the “Parties”. </td>
+                </tr>
+            </table>
+            
+            <table style="width:100%">
+            <tr>
+                <th style="width:20%"></th>
+                <th>THE PARTIES HAVE PREVIOUSLY DISCLOSED THE FOLLOWING :</th>
+                <th style="width:20%"></th>
+            </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>The Parties have signed dated
+                    {{ DateSignature is defined ? (DateSignature|date("d/m/Y")) : '' }}, an order form with the general conditions of sale of {{Societe}}, according to which the {{CathegorieClient}} 
+makes available to Client a dedicated team made up of experienced Web Developers (the « {{ hausseClient.isType == 1 ? 'Syntec' : (hausseClient.isType == 2 ? 'Smic' : 'IHCT-TS')}} initial »).
+                    <br><br>
+                In accordance with the “Price” section of the General Conditions of Sale, the amount of the Services will be revised each year according to the SYNTEC index on the anniversary date of the contract.
+                    <br><br>
+                The Parties have therefore come together in order to define in this contract (hereinafter (the « {{ hausseClient.isType == 1 ? 'Syntec' : (hausseClient.isType == 2 ? 'Smic' : 'IHCT-TS')}} »)  the terms of their agreement.
+
+                    </td>
+                    <td style="width:2%"> </td>
+                </tr>
+            </table>
+            <br>
+            <table style="width:100%">
+                <tr>
+                    <th style="width:20%"></th>
+                    <th>THIS BEING PRESENTED, IT HAS BEEN AGREED AS FOLLOWS :</th>
+                    <th style="width:20%"></th>
+                </tr>
+                </table>
+                <br>
+                <table style="width:100%">
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 1: Purpose of the Amendment.</b>
+                    <br>
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                       The purpose of this amendment is to update the pricing of the services in accordance with the terms of the General Conditions of Sale.
+                    <br><br>
+               All contractual provisions not expressly modified herein remain in force. In case of contradiction with those of the present, the latter will prevail.
+                    <br><br>
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td><b>Article 2: Modification of the "Production Pricing" section of the Purchase Order</b> <br>
+
+                </td>
+                    <td style="width:2%"> </td>
+                </tr>
+                <tr>
+                    <td style="width:2%"></td>
+                    <td>
+                        By application of the following formula: P1 = P0 x (S1/S0) <br>
+                Where <br>
+               P1 = Revised price <br>
+                P0 = Original price <br>
+               S0 = Reference SYNTEC index retained on the original contractual date = {{hausseClient.dateContrat|date('d-m-Y')}} : {{hausseClient.initial}} <br>
+                S1 = SYNTEC index published on the date of the revision = {{hausseClient.dateContrat|date('d-m-Y')}} : {{hausseClient.actuel}} <br><br>
+
+                The pricing of the Services applicable from {{hausseClient.dateAplicatif|date('d-m-Y')}} will be as follows :
+
+                    </td>
+                    <td style="width:2%"></td>
+                </tr>
+                
+                </table>
+                <br>
+                <table  style="width:100%" class="bordurer page_break" >
+                    <tr>
+                        <th class="bordurer" style="border-style: none;"></th>
+                        <th class="bordurer">Rate {{ 'now' | date('Y') -1 }}</th>
+                        <th class="bordurer">Rate {{ 'now' | date('Y') }}</th>
+                    </tr>
+                    <tr>
+                        <th class="bordurer">Hourly rate</th>
+                        <th class="bordurer">Unit price in € tax</th>
+                        <th class="bordurer">Unit price in €  tax</th>
+                    </tr>
+                    {% for BdcO in hauseBdcO %}
+                    <tr>
+                        {% if BdcO.nouveauPrix is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }}</td>
+                            <td class="bordurer">{{ BdcO.ancienPrix|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrix|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.nouveauPrixActe is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Acte</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixActe|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixActe|number_format(2, '.', ',') }}</td>
+                        {% elseif BdcO.ancienPrixHeure is not null %}
+                            <td class="bordurer">{{ BdcoperationHausseLibelle[BdcO.id] }} Heure</td>
+                            <td class="bordurer">{{ BdcO.ancienPrixHeure|number_format(2, '.', ',') }}</td>
+                            <td class="bordurer">{{ BdcO.nouveauPrixHeure|number_format(2, '.', ',') }}</td>
+                         {% else %}
+                            <td></td>
+                        {% endif %}
+
+                    </tr>
+                    {% endfor %}
+                </table>
+                <br><br>
+                <table style="width:100%">
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td><b>Article 3: Entry into force</b>
+                        <br>
+                    </td>
+                        <td style="width:2%"> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:2%"></td>
+                        <td>
+                           This addendum comes into effect on July 1, 2022.
+                        <br><br>
+                           Made in Evreux, on [.], in two (02) original copies.
+                        <br><br>
+                        </td>
+                        <td style="width:2%"></td>
+                    </tr>
+                </table>
+
+                <table style="width:100%">
+                    <tr>
+                        <th> <br><br><br><br></th>
+                        <th> <br><br><br><br></th>
+                    </tr>
+                    <tr>
+                        <td style="width:10%"></td>
+                        <td style="width:40%">
+                        </td>
+                        <td style="width:40%">{{MrsRepresente}}  {{Fonction}}</td>
+                        <td style="width:10%">
+                        </td>
+                    </tr>
+                </table>
+
+        </body>
+    </html>

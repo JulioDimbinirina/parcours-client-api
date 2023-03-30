@@ -1,0 +1,59 @@
+# This file is the entry point to configure your own servic# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    fiche_qualification_files_dir: '%kernel.project_dir%/public/fiche_qualification_files/'
+<<<<<<< HEAD
+    bdc_document_file_dir: '%kernel.project_dir%/public/bdc_document_file/'
+    bdc_dir: '/var/www/vhosts/scemi.fr/madacontact/parcours_client/bdc/'
+=======
+    # bdc_document_file_dir: '%kernel.project_dir%/public/bdc_document_file/'
+    customer_document_file_dir: '%kernel.project_dir%/public/customer_document_file/'
+    # bdc_dir: '/var/www/vhosts/scemi.fr/madacontact/parcours_client/bdc/'
+>>>>>>> efdd71e4074ab88adbfd1dbd79fd553168c78ade
+
+    document_dir: ''
+    signdoc_port: '6611'
+    signdoc_url: 'https://avocotes.outsourcia.fr:6611/'
+    signdoc_api_key: '76aa0fee-78f1-4188-ba3c-c4258aa83948'
+    package_expiration: '2'
+
+services:
+    acme_api.event.jwt_created_listener:
+        class: App\EventListener\JWTCreatedListener
+        arguments: [ '@request_stack' ]
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
+
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    App\Service\Lead:
+        autowire: true  # redundant thanks to _defaults, but value is overridable on each service
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: ['controller.service_arguments']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    app.listener.authentication_success_response:
+        class: App\EventListener\AuthenticationSuccessListener
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccessResponse }

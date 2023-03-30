@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pdf pour le service étude</title>
+
+    <style>
+        .body {
+            font-family: "Century Gothic";
+            font-weight: normal;
+            font-size: medium;
+        }
+        header {
+            margin-top: 2%;
+            margin-left: 5%;
+            width: 100%;
+        }
+        h1 {
+            color: #e75113;
+            text-shadow: #828181 1px 1px 1px;
+        }
+        h2 {
+            color: #848484;
+            text-align: center;
+        }
+        span {
+            color: #8a8a8a;
+            font-size: 11px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 96%;
+            text-align: center;
+            margin: auto;
+        }
+        th, td {
+            border: 2px solid #848484;
+            text-align: center;
+            height: 40px;
+        }
+        th {
+            background-color: #E75012;
+            color: white;
+        }
+        fieldset {
+            border:2px solid #848484;
+            -moz-border-radius:8px;
+            -webkit-border-radius:8px;
+            border-radius:8px;
+            width: 94%;
+            margin: auto;
+        }
+        .cel {
+            border-style: none;
+            color: #555555;
+            font-weight: bold;
+            text-align: left;
+            font-size: 12px;
+        }
+        .customCel1 {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            height: 15px;
+        }
+        .customCel2 {
+            margin-top: 0;
+            padding-top: 0;
+            height: 15px;
+        }
+    </style>
+
+</head>
+<body class="body">
+<!-- L'en tête de notre page PDF -->
+<header>
+    <div>
+        <h1>Fiche qualification</h1>
+    </div>
+</header>
+
+<fieldset>
+    <table style="font-size: 18px; border-style: none">
+        <tbody>
+            <tr>
+                <td class="cel">Potentiel CA Annuel (Valeur en €) : <span> {{ resumeLead.potentielCA ?? null }}</span></td>
+                <td class="cel">Niveau d'urgence : <span> {{ resumeLead.niveauUrgence ?? null }}</span></td>
+            </tr>
+            <tr>
+                <td class="cel">Origine lead : <span> {{ resumeLead.originLead.libelle ?? null }}</span></td>
+                <td class="cel">Type d'offre : <span> {{ resumeLead.typeOffre ?? null }}</span></td>
+            </tr>
+            <tr>
+                <td class="cel">Pontentiel de transformation : <span> {{ resumeLead.potentielTransformation.libelle ?? null }}</span></td>
+                <td class="cel">Outils fournis : <span> {{ resumeLead.isOutilFournis ?? null }}</span></td>
+            </tr>
+            <tr>
+                <td class="cel">Durée du traitement : <span> {{ resumeLead.dureeTrt.libelle ?? null }}</span></td>
+                <td class="cel">SEP : <span> {{ resumeLead.sepContactClient ? 'Oui' : 'Non' }}</span></td>
+            </tr>
+        </tbody>
+    </table><br>
+
+    <table style="font-size: 18px; border-style: none">
+        <tbody>
+            <tr>
+                <td class="cel customCel1">Date de debut :</td>
+                <td class="cel customCel1">Délai souhaité pour la remise de l'offre :</td>
+                <td class="cel customCel1">Date de démarrage prévue :</td>
+            </tr>
+            <tr>
+                <td class="cel customCel2"><span> {{ resumeLead.dateDebut != null ? (resumeLead.dateDebut|date("d/m/Y")) : '' }}</span></td>
+                <td class="cel customCel2"><span> {{ resumeLead.delaiRemiseOffre != null ? (resumeLead.delaiRemiseOffre|date("d/m/Y")) : '' }}</span></td>
+                <td class="cel customCel2"><span> {{ resumeLead.dateDemarrage != null ? (resumeLead.dateDemarrage|date("d/m/Y")) : '' }}</span></td>
+            </tr>
+        </tbody>
+    </table><br>
+
+    <table style="font-size: 18px; border-style: none">
+        <tbody>
+        <tr>
+            <td class="cel customCel1">Interlocuteur :</td>
+        </tr>
+        <tr>
+            <td class="cel customCel2">
+                {% for contact in contacts %}
+                    <span >- {{ contact.prenom }} - {{ contact.nom }} - {{ contact.fonction }}</span><br>
+                {% endfor %}
+            </td>
+        </tr>
+        </tbody>
+    </table><br>
+
+    <table style="font-size: 18px; border-style: none">
+        <tbody>
+        <tr>
+            <td class="cel customCel1">Résumé de la prestation :</td>
+            <td class="cel customCel1" style="text-align: right">Précisions éventuellement apportées par le client:</td>
+        </tr>
+        <tr>
+            <td class="cel customCel2"><span>{{ resumeLead.resumePrestation ?? null }}</span></td>
+            <td class="cel customCel2" style="text-align: right"><span>{{ resumeLead.percisionClient ?? null }}</span></td>
+        </tr>
+        </tbody>
+    </table><br>
+
+    <table style="font-size: 12px">
+        <tbody>
+            <tr>
+                <td class="cel customCel1">Points de vigilance :</td>
+            </tr>
+            <tr>
+                <td class="cel customCel2"><span>{{ resumeLead.pointVigilance ?? null }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+</fieldset>
+
+<h2>Détail de l'opération</h2>
+
+<table class="table1" style="font-size: 12px">
+    <thead>
+    <tr>
+        <th>Pays de production</th>
+        <th>Pays de facturation</th>
+        <th>Business unit</th>
+        <th>Famille opération</th>
+        <th>Opération</th>
+        <th>Profil agent</th>
+        <th>Catégorie lead</th>
+        <th>Volume à traiter</th>
+        <th>Nombre d'heure mensuel</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for leadDetailOperation in resumeLead.leadDetailOperations %}
+        {% if leadDetailOperation.operation.id is not null %}
+            <tr>
+                <td>{{ leadDetailOperation.paysProduction.libelle ?? null }}</td>
+                <td>{{ leadDetailOperation.paysFacturation.libelle ?? null }}</td>
+                <td>{{ leadDetailOperation.bu.libelle ?? null }}</td>
+                <td>{{ leadDetailOperation.familleOperation.libelle ?? null }}</td>
+                <td>{{ leadDetailOperation.operation.libelle ?? null }}</td>
+                <td>{{ leadDetailOperation.coutHoraire.niveau ?? null }} - {{ leadDetailOperation.coutHoraire.langueSpecialite ?? null }}</td>
+                <td>{{ leadDetailOperation.categorieLead ?? null }}</td>
+                <td>{% if leadDetailOperation.typeFacturation.id == 1 %}
+                    {{ leadDetailOperation.volumeATraite ?? null }}
+                {% endif %}</td>
+                <td>{% if leadDetailOperation.typeFacturation.id == 3 %}
+                    {{ leadDetailOperation.nbHeureMensuel ?? null }}
+                {% endif %}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PDF BDC</title>
+	<style>
+		.class { 
+			font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; 
+		}
+	</style>
+    </head>
+    <body class="class">
+        {% block body %}
+	<div>
+		<div style="float:left; background-color:#DB3315; color:#ffffff;">
+			{#<img src="https://madacontact.com/parcours_client/bdc/logo_bdc.jpg"/>#}
+			IMPRESISON LOGO EN COURS DE SOLUTION
+		</div>
+		<div style="float:left; margin-left:90px; font-size:26px; font-weight:bold; background-color:#DB3315; color:#ffffff;">
+			BON DE COMMANDE
+		</div>
+		<div style="clear:both">{{ avenant }}</div>
+		<div style="float:left; font-size:13px;">
+			<div>
+				<span style="font-weight:bold;">OUTSOURCIA SAS</span>
+			</div>
+			<div>
+				<span style="font-weight:bold;">Contact :</span> {{ bdc.resumeLead.customer.user.eraseCredentials }} - {{ bdc.resumeLead.customer.user.email }}
+			</div>
+			<div>&nbsp;</div>
+			<div>
+				<span style="font-weight:bold;">Numéro de client :</span> {{ bdc.resumeLead.customer.id }}
+			</div>
+			<div>
+				<span style="font-weight:bold;">Numéro de BDC :</span> {{ bdc.numBdc }}
+			</div>
+			<div>
+				<span style="font-weight:bold;">Pays de production :</span> {{ bdc.paysProduction.libelle }}
+			</div>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="float:left; margin-left:450px; font-size:13px;">
+			<div>
+				<span style="font-weight:bold;">A l'attention de :</span> {{ bdc.resumeLead.customer.contacts[0].prenom ?? null }} {{ bdc.resumeLead.customer.contacts[0].nom ?? null }}
+			</div>
+			<div>
+				<span style="font-weight:bold;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> {{ bdc.resumeLead.customer.raisonSocial }} 
+			</div>
+			<div>
+				<span style="font-weight:bold;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> {{ bdc.resumeLead.customer.adresse }}
+			</div>
+			<div>
+				<span style="font-weight:bold;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> {{ bdc.resumeLead.customer.cp }}
+			</div>
+			<div>
+				<span style="font-weight:bold;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> {{ bdc.resumeLead.customer.ville }}
+			</div>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div>
+			<table cellspacing="0" cellpadding="0" style="table-layout: auto; width: 100%;">
+				<tr style="background-color:#DB3315; color:#ffffff; vertical-align: middle; text-align: center; font-size:12px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">DESIGNATION</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">BUSINESS UNIT</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">QUANTITÉ</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">PRIX UNITAIRE HT ({{ bdc.devise.libelle }})</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">MONTANT HT ({{ bdc.devise.libelle }})</td>
+				</tr>
+			
+				{% for bdcOperation in bdc.bdcOperations %}
+					{% if bdcOperation.operation.id != 46 and
+						bdcOperation.operation.id != 12 and
+						bdcOperation.operation.id != 47 and
+						bdcOperation.operation.id != 9 and
+						bdcOperation.operation.id != 10 and
+						bdcOperation.operation.id != 8 and
+						bdcOperation.operation.id != 15 and
+						bdcOperation.operation.id != 16 and
+						bdcOperation.operation.id != 17 and
+						bdcOperation.operation.id != 48 and
+						bdcOperation.operation.id != 49
+					%}
+						{% if bdcOperation.operation.id == 14 %}
+							{% if bdcOperation.avenant == 1 %}
+								<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold; background-color: green">
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.operation.libelle ~ ' ' ~ bdc.resumeLead.customer.raisonSocial }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ '' }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ '' }}
+									</td>
+
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ (bdcOperation.prixUnit)|number_format(2, '.') }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, '.') }}
+									</td>
+								</tr>
+							{% endif %}
+							<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold;">
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.operation.libelle ~ ' ' ~ bdc.resumeLead.customer.raisonSocial }}</td>
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ '' }}</td>
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+									{{ '' }}
+								</td>
+
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ (bdcOperation.prixUnit)|number_format(2, '.') }}</td>
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+									{{ (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, '.') }}
+								</td>
+							</tr>
+						{% else %}
+							{% if bdcOperation.avenant == 1 %}
+								<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold; background-color: green">
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.operation.libelle }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.bu.libelle ? bdcOperation.bu.libelle : '' }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ bdcOperation.quantite ? bdcOperation.quantite : '' }}
+									</td>
+
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ (bdcOperation.prixUnit)|number_format(2, '.') }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, '.') }}
+									</td>
+								</tr>
+							{% endif %}
+							<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold;">
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.operation.libelle }}</td>
+								{% if bdcOperation.bu.libelle is defined and bdcOperation.quantite is defined %}
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdcOperation.bu.libelle }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ bdcOperation.quantite }}
+									</td>
+								{% else %}
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ '' }}</td>
+									<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+										{{ '' }}
+									</td>
+								{% endif %}
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ (bdcOperation.prixUnit)|number_format(2, '.') }}</td>
+								<td style="border-style: solid; border-width: 1px; border-color: #000000;">
+									{{ (bdcOperation.prixUnit * bdcOperation.quantite)|number_format(2, '.') }}
+								</td>
+							</tr>
+						{% endif %}
+					{% endif %}
+				{% endfor %}
+			</table>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div>
+			<table cellspacing="0" cellpadding="0" style="table-layout: auto; width: 100%;">
+				<tr style="background-color:#CECECE; color:#000000; vertical-align: middle; text-align: center; font-size:12px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">Total HT</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">Taux de TVA</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">TVA</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">Total TTC</td>
+				</tr>
+				<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ totalHT|number_format(2, '.') }} {{ bdc.devise.libelle}}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdc.tva.libelle }}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ montantTva|number_format(2, '.') }} {{ bdc.devise.libelle}}</td>
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ (totalHT + montantTva)|number_format(2, '.') }} {{ bdc.devise.libelle}}</td>
+				</tr>
+			</table>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div>
+			<table cellspacing="0" cellpadding="0" style="table-layout: auto; width: 100%;">
+				<tr style="background-color:#CECECE; color:#000000; vertical-align: middle; text-align: center; font-size:12px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">Conditions de règlement</td>
+				</tr>
+				<tr style="vertical-align: middle; text-align: center; font-size:13px; font-weight:bold;">
+					<td style="border-style: solid; border-width: 1px; border-color: #000000;">{{ bdc.modeReglement }} {{ bdc.delaisPaiment }}</td>
+				</tr>
+			</table>
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">COORDONNÉES BANCAIRES</span>
+		</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">TITULAIRE :</span> {% if bdc.societeFacturation.coordoneBancaires[0].titulaire is defined %} {{ bdc.societeFacturation.coordoneBancaires[0].titulaire}} {% endif %}
+		</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">DOMICILIATION :</span> {% if bdc.societeFacturation.coordoneBancaires[0].domiciliation is defined %} {{ bdc.societeFacturation.coordoneBancaires[0].domiciliation}} {% endif %}
+		</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">RIB :</span> {% if bdc.societeFacturation.coordoneBancaires[0].rib is defined %} {{ bdc.societeFacturation.coordoneBancaires[0].rib}} {% endif %}
+		</div>
+		<div style="clear:both">&nbsp;</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">Date :</span> {{ date_edit }}
+		</div>
+		<div style="font-size:13px;">
+			<span style="font-weight:bold;">Signature et cachet client</span>
+		</div>
+	</div>
+	{% endblock %}
+    </body>
+</html>

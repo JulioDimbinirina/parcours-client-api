@@ -1,0 +1,277 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    fiche_qualification_files_dir: '%kernel.project_dir%/public/fiche_qualification_files/'
+
+    document_file_dir: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/document/'
+    # document_file_dir: 'document/'
+
+    operation_file_dir: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/operation_file/'
+    # operation_file_dir: '%kernel.project_dir%/public/operation_file/'
+
+    # cout_horaire_file_dir: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/cout_horaire_file/'
+    cout_horaire_file_dir: '%kernel.project_dir%/public/cout_horaire_file/'
+
+    exported_bdc: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/'
+
+    # Path to store local image
+    bonus_malus_image_dir: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/bonusMalusImage/'
+    # bonus_malus_image_dir: '/var/www/vhosts/scemi.fr/madacontact/parcours_client/bonusMalusImage/'
+    # bonus_malus_image_dir: 'bonusMalusImage/'
+
+    # bdc files directory
+    bdc_dir: '/var/www/vhosts/outsourcia.fr/api.parcoursclients.outsourcia.fr/api/public/bdc/'
+    # bdc_dir: '/var/www/vhosts/scemi.fr/madacontact/parcours_client/api/public/bdc/'
+    # bdc_dir: 'bdc/'
+
+    from_email: 'parcours_clients@outsourcia-group.com'
+
+    document_dir: ''
+    signdoc_port: '6611'
+    signdoc_url: 'https://avocotes.outsourcia.fr:6611/'
+    signdoc_api_key: '76aa0fee-78f1-4188-ba3c-c4258aa83948'
+    package_expiration: '2'
+
+    seuilToStartValidationProcess: 500
+    seuilMargeCible: 0
+
+    inject_client_contact_to_crm_actuel_url: 'http://localhost/crm_actuel/api/client/create.php'
+    # inject_client_contact_to_crm_actuel_url: 'https://madacontact.com/crm_actuel/api/client/create.php'
+
+    get_client_contact_in_crm_actuel_url: 'http://localhost/crm_actuel/api/client/get_by_pays_prod.php'
+    # get_client_contact_in_crm_actuel_url: 'https://madacontact.com/crm_actuel/api/client/get_by_pays_prod.php'
+
+    # param_pays_url: 'http://localhost:12992/api/pays/list'
+    # param_pays_search_url: 'http://localhost:12992/api/pays/search/'
+    # param_bu_url: 'http://localhost:12992/api/bu/list'
+    # param_bu_search_url: 'http://localhost:12992/api/bu/search/'
+    # param_client_url: 'http://localhost:12992/api/client/list'
+    # param_all_client_url: 'http://localhost:12992/api/client/list/all'
+    # param_rs_align_for_client_url: 'http://localhost:12992/api/client/update/raison/social'
+    # param_client_search_url: 'http://localhost:12992/api/client/search/'
+    # param_operation_url: 'http://localhost:12992/api/operation/list/'
+    # param_operation_search_url: 'http://localhost:12992/api/operation/search/'
+    # param_injection_cout_in_suivirenta_url: 'http://localhost:12992/api/cout/save'
+    # param_update_cout_in_suivirenta_url: 'http://localhost:12992/api/cout/update'
+    # param_list_tarif_in_suivirenta_url: 'http://localhost:12992/api/tarif/list/'
+    # param_inject_tarif_in_suivirenta_url: 'http://localhost:12992/api/tarif/save'
+    # param_heure_agent_url: 'http://localhost:12992/api/saisie/manager/list'
+    # param_heure_agent_search_url: 'http://localhost:12992/api/saisie/manager/search/'
+    # param_inject_or_update_heure_agent_in_suivirenta_url: 'http://localhost:12992/api/saisie/manager/save'
+    # param_save_customer_budget_url: 'http://localhost:12992/api/budget/save'
+    # param_import_data_file_budget_url: 'http://localhost:12992/api/budget/import/data/file'
+    # facture_parametre: 'http://localhost:12992/api/saisie/manager/facturation2/'
+    # facture_sansExcel Talou: 'http://localhost:12992/api/saisie/manager/getAll/facturation/tous/'
+    # facture_sansExcelUno Talou: 'http://localhost:12992/api/saisie/manager/getAll/facturation/'
+    # param_client_url_distinct: 'http://localhost:12992/api/client/listDistinct'
+    # param_client_url_distinct_ok: 'http://localhost:12992/api/saisie/manager/client/listDistinct'
+    # getclientbyop : 'http://localhost:12992/api/saisie/manager/clientbyoperation'
+    # daty_farany : 'http://localhost:12992/api/saisie/manager/saisie/datefarany'
+    # setClientSage : 'http://localhost:12992/api/saisie/manager/setClient/checked/asp'
+    # facture_sansExcel : 'http://localhost:12992/api/saisie/manager/test/Facture2/tous/'
+    # facture_sansExcelUno : 'http://localhost:12992/api/saisie/manager/test/Facture2/'
+    # suivirentaUrl: http://localhost:12992/
+    
+
+    param_pays_url: 'http://197.158.82.222:8081/suivirenta/api/pays/list'
+    param_pays_search_url: 'http://197.158.82.222:8081/suivirenta/api/pays/search/'
+    param_bu_url: 'http://197.158.82.222:8081/suivirenta/api/bu/list'
+    param_bu_search_url: 'http://197.158.82.222:8081/suivirenta/api/bu/search/'
+    param_client_url: 'http://197.158.82.222:8081/suivirenta/api/client/list'
+    param_all_client_url: 'http://197.158.82.222:8081/suivirenta/api/client/list/all'
+    param_rs_align_for_client_url: 'http://197.158.82.222:8081/suivirenta/api/client/update/raison/social'
+    param_client_search_url: 'http://197.158.82.222:8081/suivirenta/api/client/search/'
+    param_operation_url: 'http://197.158.82.222:8081/suivirenta/api/operation/list/'
+    param_operation_search_url: 'http://197.158.82.222:8081/suivirenta/api/operation/search/'
+    param_injection_cout_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/cout/save'
+    param_update_cout_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/cout/update'
+    param_list_tarif_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/tarif/list/'
+    param_inject_tarif_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/tarif/save'
+    param_update_tarif_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/tarif/update'
+    param_heure_agent_url: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/list'
+    param_heure_agent_search_url: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/search/'
+    param_save_customer_budget_url: 'http://197.158.82.222:8081/suivirenta/api/budget/save'
+    param_import_data_file_budget_url: 'http://197.158.82.222:8081/suivirenta/api/budget/save'
+    param_inject_or_update_heure_agent_in_suivirenta_url: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/save'
+    facture_parametre: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/facturation2/'
+    facture_sansExcel Talou: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/getAll/facturation/tous/'
+    facture_sansExcelUno Talou: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/getAll/facturation/'
+    param_client_url_distinct: 'http://197.158.82.222:8081/suivirenta/api/client/listDistinct'
+    param_client_url_distinct_ok: 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/client/listDistinct'
+    getclientbyop : 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/clientbyoperation'
+    daty_farany : 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/saisie/datefarany'
+    setClientSage : 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/setClient/checked/asp'
+    facture_sansExcel : 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/test/Facture2/tous/'
+    facture_sansExcelUno : 'http://197.158.82.222:8081/suivirenta/api/saisie/manager/test/Facture2/'
+    suivirentaUrl: http://197.158.82.222:8081/suivirenta/
+    
+
+
+    #url suivi rentra direct
+    suivi_renta_client_url_post: 'http://197.158.82.222:8081/suivirenta/api/client/save'
+    suivi_renta_operation_url_post: 'http://197.158.82.222:8081/suivirenta/api/operation/save'
+    suivi_renta_bu_url_post: 'http://197.158.82.222:8081/suivirenta/api/bu/save'
+    suivi_renta_pays_url_post: 'http://197.158.82.222:8081/suivirenta/api/pays/save'
+
+    # Url pour l'injection client dans IRM
+    irm_client_france_url_post: 'http://90.83.66.182/operation/Operation/restAddClient'
+    irm_client_maroc_url_post: 'http://90.83.66.182/operation/Operation/restAddClient'
+    irm_client_mada_url_post: 'http://90.83.66.182/operation/Operation/restAddClient'
+    irm_client_niger_url_post: 'http://90.83.66.182/operation/Operation/restAddClient'
+
+    # Url pour l'injection operation dans IRM
+    irm_operation_france_url_post: 'http://90.83.66.182/operation/Operation/restAddOperation'
+    irm_operation_maroc_url_post: 'http://90.83.66.182/operation/Operation/restAddOperation'
+    irm_operation_mada_url_post: 'http://90.83.66.182/operation/Operation/restAddOperation'
+    irm_operation_niger_url_post: 'http://90.83.66.182/operation/Operation/restAddOperation'
+
+    # Url pour la recuperation des heures agent dans IRM
+    irm_get_heures_agent: 'http://90.83.66.182/rapport_excel/ExportExcel/rapportHeuresOperationJson/'
+
+    # For a new id operation
+    # param_id_operation_automatique: [1,12,1004,2,3,4,5,6,7,8,9,10,11,15,14]
+    param_id_operation_automatique: [1, 12, 14, 1007, 15, 1004]
+    param_id_operation_bonus_malus_qualite: [1,12,1004,6,7,15,14]
+    param_id_operation_not_bonus_malus: [1,12,1004,15,14]
+    param_not_required_profil_agent: [12,1004,2,3,4,5,6,7,8,9,10,11,15,14,1005]
+    param_id_operation_formation: [16, 17]
+    param_id_operation_formation_continue: 17
+    param_not_controlled_profilAgent_input: [1,1006, 1007]
+    param_id_operation_frais_mise_en_place_and_formation: [1,16]
+    param_id_operation_bonus_malus_frais_telecoms: [2,3,4,5,6,7,8,9,10,11,15,13,1005,1006,17]
+    param_id_operation_bonus_malus_frais_telecoms_2: [2,3,4,5,6,7,8,9,10,11,15]
+    param_id_operation_panne_technique_outsourcia: 12
+    param_id_operation_supprimable_dans_lign_fact: [15]
+    param_id_operation_heure_panne_technique: 13
+    param_id_operation_malbon: 1007
+    param_id_operation_formation_panne_technique: [16,17,13]
+    param_id_operation_not_in_lign_fact_list: [12, 15, 1004]
+
+    param_id_bu_inboud_helpdesk: [2,3]
+    param_id_bu_outbound_etude_bpo_data_redaction: [1,8,4,10,5]
+
+    param_lign_fact_auto_type_heure: [16,17,13,12]
+    param_lign_fact_auto_type_acte: [2,3,4,5,6,7,8,9,10,11,15,1004,1007]
+    param_lign_fact_auto_type_forfait: [1,14]
+
+    param_id_type_fact_acte: 1
+    param_id_type_fact_heure: 3
+    param_id_type_fact_forfaitaire: 4
+    param_id_type_fact_forfait: 5
+    param_id_type_fact_mixte: 7
+    param_id_type_facte_acte_heure: [1, 3]
+    param_id_type_facte_heure_forfait: [3, 5]
+    param_is_hno: 1
+
+    param_statut_lead_bdc_for_bdc_operation_to_delete: [null, -1, 3, 5, 7, 9, 10, 14, 16, 18, 19]
+
+    statut_lead_bdc_draft: '-1'
+    statut_lead_client_creer: '1'
+    statut_lead_fiche_qualification_creer: '2'
+    statut_lead_bdc_creer: '3'
+    statut_lead_bdc_valider_dir_prod: '4'
+    statut_lead_bdc_rejeter_dir_prod: '5'
+    statut_lead_bdc_valider_dir_fin: '6'
+    statut_lead_bdc_rejeter_dir_fin: '7'
+    statut_lead_bdc_valider_dg: '8'
+    statut_lead_bdc_rejeter_dg: '9'
+    statut_lead_bdc_signe_com: '10'
+    statut_lead_bdc_signe_client: '11'
+    statut_lead_bdc_avenant_creer: '12'
+    statut_lead_bdc_avenant_valider_dir_prod: '13'
+    statut_lead_bdc_avenant_rejeter_dir_prod: '14'
+    statut_lead_bdc_avenant_valider_dir_fin: '15'
+    statut_lead_bdc_avenant_rejeter_dir_fin: '16'
+    statut_lead_bdc_avenant_valider_dg: '17'
+    statut_lead_bdc_avenant_rejeter_dg: '18'
+    statut_lead_bdc_avenant_signe_com: '19'
+    statut_lead_bdc_avenant_signe_client: '20'
+    statut_lead_bdc_perdu: '21'
+
+    statut_lead_avenant_rejeter: [14,16,18]
+    statut_lead_bdc_avenant: [12, 13, 14, 15, 16, 17, 18, 19, 20]
+    statut_lead_validate_by_dir_fin: [6, 15]
+    statut_lead_signed_by_commercial: [10, 19]
+
+    statut_lead_workflow_validation: [3, 4, 6, 8, 10, 12, 13, 15, 17]
+    role_validators: [ROLE_DIRPROD, ROLE_FINANCE, ROLE_DG, SIGN]
+
+    statut_lead_for_dg_relance: [8, 17]
+    statut_lead_for_commercial_relance: [10, 19]
+
+    role_simple_user: 'ROLE_USER'
+    role_dir_prod: 'ROLE_DIRPROD'
+    role_dir_gest_compte: 'ROLE_DIRGESTCOMPTE'
+    role_ser_finance: 'ROLE_FINANCE'
+    role_dir_general: 'ROLE_DG'
+
+    url_api: 'http://api.parcoursclients.outsourcia.fr/public'
+
+    emailServiceEtude: 'sepoutsourcia2022@gmail.com'
+    # email_dir_gest_compte: 'kauffret@outsourcia-group.com'
+    email_dir_gest_compte: 'dirgestcompteoutsourcia2022@gmail.com'
+
+    # Parametre de connexion vers la base de donnée tana_paris
+    # host_bdd_tana_paris: 'localhost'
+    host_bdd_tana_paris: '151.236.34.51'
+
+    # username_bdd_tana_paris: 'root'
+    username_bdd_tana_paris: 'tana_paris'
+
+    # password_bdd_tana_paris: ''
+    password_bdd_tana_paris: 'hjnGbv52kR'
+
+    db_name_tana_paris: 'tana_paris'
+
+    limit_client_of_tana_paris_customer: 5
+
+services:
+  acme_api.event.jwt_created_listener:
+    class: App\EventListener\JWTCreatedListener
+    arguments: ["@request_stack"]
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: lexik_jwt_authentication.on_jwt_created,
+          method: onJWTCreated,
+        }
+
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+  App\Service\Lead:
+    autowire: true # redundant thanks to _defaults, but value is overridable on each service
+
+  # makes classes in src/ available to be used as services
+  # this creates a service per class whose id is the fully-qualified class name
+  App\:
+    resource: "../src/"
+    exclude:
+      - "../src/DependencyInjection/"
+      - "../src/Entity/"
+      - "../src/Kernel.php"
+      - "../src/Tests/"
+      - "../src/Models/"
+
+  # controllers are imported separately to make sure services can be injected
+  # as action arguments even if you don't extend any base controller class
+  App\Controller\:
+    resource: "../src/Controller/"
+    tags: ["controller.service_arguments"]
+
+  # add more service definitions when explicit configuration is needed
+  # please note that last definitions always *replace* previous ones
+
+  app.listener.authentication_success_response:
+    class: App\EventListener\AuthenticationSuccessListener
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: lexik_jwt_authentication.on_authentication_success,
+          method: onAuthenticationSuccessResponse,
+        }
